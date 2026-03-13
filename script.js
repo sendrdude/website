@@ -411,7 +411,7 @@
       "ARCHIVES & BREACH": [
         { n: "Wayback Machine", native: "nativeWayback", desc: "Web archive CDX search and snapshot browser" },
         { n: "Email Breach Check", native: "nativeHIBP", desc: "Have I Been Pwned breach database" },
-        { n: "Pastebin Search", native: "nativePasteSearch", desc: "Search Pastebin and paste sites via psbdmp.ws" },
+        { n: "Pastebin Search", native: "nativePasteSearch", desc: "Search 49 paste sites via cipher387's multi-engine index" },
         { n: "Dehashed", u: "https://dehashed.com", desc: "Leaked credential database search" },
         { n: "GhostProject", u: "https://ghostproject.fr", desc: "Leaked passwords and credential search" },
       ],
@@ -3007,26 +3007,45 @@ ${tnForm('wayback', 'https://example.com', 'FIND SNAPSHOTS', 'runWayback()')}
     // 22. Pastebin Search
     // ─────────────────────────────────────────────────
     window.nativePasteSearch = function (panel) {
+      const sites = [
+        '0bin.net','apaste.info','bitbin.it','cl1p.net','codekeep.io','controlc.com',
+        'defuse.ca','doxbin.org','dpaste.com','dumpz.org','kpaste.net','etherpad.org',
+        'everfall.com','friendpaste.com','gist.github.com','hastebin.com','hatebin.com',
+        'heypasteit.com','ideone.com','ivpaste.com','justpaste.it','jsbin.com',
+        'pst.klgrth.io','notes.io','paste.null-life.com','paste.debian.net','paste.ee',
+        'paste.centos.org','invent.kde.org','paste.ofcode.org','paste.opensuse.org',
+        'paste.org.ru','paste.rohitab.com','paste.ubuntu.com','paste.xinu.at','paste2.org',
+        'paste4btc.com','pasteall.org','pastebin.osuosl.org','pastebin.com','pastebin.pt',
+        'pastelink.net','pastie.org','privatebin.net','snipplr.com','textsnip.com',
+        'vpaste.net','pastebin.fr','pastebin.ga'
+      ];
+      window._pasteGroups = [sites.slice(0, 16), sites.slice(16, 33), sites.slice(33)];
       panel.innerHTML = `
-<div class="tn-title">PASTEBIN SEARCH</div>
-<div class="tn-sub">Search Pastebin and related paste sites via psbdmp.ws for exposed credentials, code, or data containing your keywords.</div>
+<div class="tn-title">PASTEBIN SEARCH ENGINES</div>
+<div class="tn-sub">Search across 49 paste sites using <a href="https://github.com/cipher387/pastebinsearchengines" target="_blank" style="color:var(--g);text-decoration:underline">cipher387's multi-engine index</a>. Enter a keyword to generate Google dork search links across all paste platforms.</div>
 ${tnForm('paste', 'email, domain, or keyword', 'SEARCH', 'runPasteSearch()')}
-<div id="paste-results" style="display:none"></div>`;
+<div id="paste-results" style="display:none"></div>
+<div class="tn-section-lbl" style="margin-top:14px">ALL 49 PASTE SITES</div>
+<div class="tn-platform-grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px">${sites.map(s => `<div class="tn-platform-link" onclick="loadToolFrame('https://${s}','${s}')"><div class="tn-platform-dot chk"></div><span style="font-size:9px">${s}</span></div>`).join('')}</div>`;
     };
-    window.runPasteSearch = async function () {
+    window.runPasteSearch = function () {
       const q = tnVal('paste'); if (!q) { tnSetErr('paste', 'Enter a search term'); return; }
-      tnSetErr('paste', ''); tnSetLoad('paste', true);
-      document.getElementById('paste-results').style.display = 'none';
-      try {
-        const r = await proxyFetch('https://psbdmp.ws/api/search/' + encodeURIComponent(q), 10000);
-        const j = await r.json();
-        const items = j.data || j || [];
-        if (!Array.isArray(items) || !items.length) throw new Error('No results found. Try broader keywords.');
-        const rows = items.slice(0, 20).map(p => `<tr><td style="color:var(--g)">${p.id || '?'}</td><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.text?.slice(0, 80) || '?'}</td><td><button class="tn-snap-btn" onclick="loadToolFrame('https://pastebin.com/${p.id}','Paste ${p.id}')">VIEW</button></td></tr>`).join('');
-        document.getElementById('paste-results').style.display = 'block';
-        document.getElementById('paste-results').innerHTML = tnCard(`${Math.min(items.length, 20)} PASTE RESULTS`, `<div style="padding:0"><table class="tn-table"><thead><tr><th>ID</th><th>PREVIEW</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`);
-      } catch (e) { tnSetErr('paste', e.message); }
-      finally { tnSetLoad('paste', false); }
+      const el = document.getElementById('paste-results');
+      el.style.display = 'block';
+      el.innerHTML = tnCard('SEARCH: ' + q.toUpperCase(), `
+        <div class="tn-section-lbl" style="margin-bottom:6px">CYBDETECTIVE MULTI-ENGINE CSE (49 SITES)</div>
+        <button class="tn-btn" onclick="loadToolFrame('https://cybdetective.com/pastebin.html','Pastebin CSE')" style="width:100%;margin-bottom:10px">OPEN MULTI-SEARCH →</button>
+        <div class="tn-section-lbl" style="margin-bottom:6px">GOOGLE DORK — SPLIT ACROSS 3 SITE GROUPS</div>
+        <button class="tn-snap-btn" style="width:100%;margin-bottom:4px;padding:6px 8px;font-size:9px" onclick="pasteDork(0)">GROUP 1 · SITES 1–16 ↗</button>
+        <button class="tn-snap-btn" style="width:100%;margin-bottom:4px;padding:6px 8px;font-size:9px" onclick="pasteDork(1)">GROUP 2 · SITES 17–33 ↗</button>
+        <button class="tn-snap-btn" style="width:100%;margin-bottom:4px;padding:6px 8px;font-size:9px" onclick="pasteDork(2)">GROUP 3 · SITES 34–49 ↗</button>
+      `);
+    };
+    window.pasteDork = function (grpIdx) {
+      const q = tnVal('paste');
+      if (!q || !window._pasteGroups) return;
+      const grp = window._pasteGroups[grpIdx];
+      window.open('https://www.google.com/search?q=' + encodeURIComponent(q + ' ' + grp.map(s => 'site:' + s).join(' OR ')), '_blank');
     };
 
     // ─────────────────────────────────────────────────
