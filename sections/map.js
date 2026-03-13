@@ -11,8 +11,6 @@ document.getElementById('sec-map-wrap').outerHTML = `
           <button class="ptab active" onclick="showSideTab('cameras',this)">CAMERAS</button>
           <button class="ptab" onclick="showSideTab('tools-side',this)">TOOLS</button>
         </div>
-        <div id="cam-http-notice">⚠ HTTP feeds may be blocked by HTTPS. Open file:// locally for best results.<button
-            id="cam-notice-close" onclick="this.parentElement.style.display='none'">✕</button></div>
         <div class="scroll" id="pane-cameras"></div>
         <div class="scroll hidden-pane" id="pane-tools-side">
           <input type="text" id="tool-search-input" placeholder="filter tools..." oninput="filterSideTools(this.value)">
@@ -25,8 +23,8 @@ document.getElementById('sec-map-wrap').outerHTML = `
       <div id="map-wrap">
         <div id="map-toolbar">
           <span class="btm-lbl">BASE</span>
-          <button class="mtbtn on" id="bl-dark" onclick="setBase('dark',this)">DARK</button>
-          <button class="mtbtn" id="bl-sat" onclick="setBase('sat',this)">SAT</button>
+          <button class="mtbtn" id="bl-dark" onclick="setBase('dark',this)">DARK</button>
+          <button class="mtbtn on" id="bl-sat" onclick="setBase('sat',this)">SAT</button>
           <button class="mtbtn" id="bl-topo" onclick="setBase('topo',this)">TOPO</button>
           <button class="mtbtn" id="bl-street" onclick="setBase('street',this)">STREET</button>
           <span class="bsep"></span>

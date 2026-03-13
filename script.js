@@ -921,6 +921,10 @@
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         { maxZoom: 19, attribution: '' }),
 
+      satLabels: L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '', pane: 'overlayPane' }),
+
       topo: L.tileLayer(
         `https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}.png?api_key=${STADIA_KEY}`,
         { maxZoom: 20, attribution: '' }),
@@ -931,10 +935,11 @@
     };
 
     const map = L.map('map', { center: [25, 10], zoom: 3, zoomControl: true, attributionControl: false, preferCanvas: true });
-    // Add dark layer immediately, wait for DOM then force size recalc
-    TILE_LAYERS.dark.addTo(map);
+    // Add sat layer immediately, wait for DOM then force size recalc
+    TILE_LAYERS.sat.addTo(map);
+    TILE_LAYERS.satLabels.addTo(map);
     window.addEventListener('load', () => { setTimeout(() => map.invalidateSize(), 100); });
-    let activeBase = 'dark';
+    let activeBase = 'sat';
 
     const camLayerGroup = L.layerGroup().addTo(map);
     const flightLayerGroup = L.layerGroup();
@@ -953,7 +958,9 @@
     function setBase(name, btn) {
       if (name === activeBase) return; // already active
       map.removeLayer(TILE_LAYERS[activeBase]);
+      if (activeBase === 'sat') map.removeLayer(TILE_LAYERS.satLabels);
       TILE_LAYERS[name].addTo(map);
+      if (name === 'sat') TILE_LAYERS.satLabels.addTo(map);
       activeBase = name;
       document.querySelectorAll('#map-toolbar .mtbtn').forEach(b => {
         if (['bl-dark', 'bl-sat', 'bl-topo', 'bl-street'].includes(b.id)) b.classList.remove('on');
@@ -2418,38 +2425,78 @@
 ${tnForm('usr', 'username / handle', 'SEARCH', 'runUsernameSearch()')}
 <div id="usr-results" style="display:none"></div>`;
     };
-    window.runUsernameSearch = function () {
+    window.runUsernameSearch = async function () {
       const u = tnVal('usr'); if (!u) { tnSetErr('usr', 'Enter a username'); return; }
       tnSetErr('usr', '');
+      tnSetLoad('usr', true);
+
+      // Platforms where we check for a real profile (api = reliable JSON endpoint; url = profile page)
       const platforms = [
-        { n: 'Twitter/X', url: `https://x.com/${u}` },
-        { n: 'Instagram', url: `https://instagram.com/${u}` },
-        { n: 'TikTok', url: `https://tiktok.com/@${u}` },
-        { n: 'GitHub', url: `https://github.com/${u}` },
-        { n: 'Reddit', url: `https://reddit.com/user/${u}` },
-        { n: 'LinkedIn', url: `https://linkedin.com/in/${u}` },
-        { n: 'Facebook', url: `https://facebook.com/${u}` },
-        { n: 'YouTube', url: `https://youtube.com/@${u}` },
-        { n: 'Twitch', url: `https://twitch.tv/${u}` },
-        { n: 'Pinterest', url: `https://pinterest.com/${u}` },
-        { n: 'Snapchat', url: `https://snapchat.com/add/${u}` },
-        { n: 'Medium', url: `https://medium.com/@${u}` },
-        { n: 'Tumblr', url: `https://${u}.tumblr.com` },
-        { n: 'SoundCloud', url: `https://soundcloud.com/${u}` },
-        { n: 'Spotify', url: `https://open.spotify.com/user/${u}` },
-        { n: 'Steam', url: `https://steamcommunity.com/id/${u}` },
-        { n: 'Roblox', url: `https://roblox.com/user.aspx?username=${u}` },
-        { n: 'Patreon', url: `https://patreon.com/${u}` },
-        { n: 'DeviantArt', url: `https://deviantart.com/${u}` },
-        { n: 'Flickr', url: `https://flickr.com/people/${u}` },
-        { n: 'Vimeo', url: `https://vimeo.com/${u}` },
-        { n: 'WhatsMyName', url: `https://whatsmyname.app/?q=${u}` },
-        { n: 'Sherlock (CLI)', url: `https://github.com/sherlock-project/sherlock` },
-        { n: 'OSINT Industries', url: `https://osint.industries/` },
+        { n: 'GitHub',      url: `https://github.com/${u}`,                    api: `https://api.github.com/users/${u}` },
+        { n: 'Reddit',      url: `https://reddit.com/user/${u}`,               api: `https://www.reddit.com/user/${u}/about.json` },
+        { n: 'Twitter/X',   url: `https://x.com/${u}` },
+        { n: 'Instagram',   url: `https://instagram.com/${u}` },
+        { n: 'TikTok',      url: `https://tiktok.com/@${u}` },
+        { n: 'LinkedIn',    url: `https://linkedin.com/in/${u}` },
+        { n: 'Facebook',    url: `https://facebook.com/${u}` },
+        { n: 'YouTube',     url: `https://youtube.com/@${u}` },
+        { n: 'Twitch',      url: `https://twitch.tv/${u}` },
+        { n: 'Pinterest',   url: `https://pinterest.com/${u}` },
+        { n: 'Snapchat',    url: `https://snapchat.com/add/${u}` },
+        { n: 'Medium',      url: `https://medium.com/@${u}` },
+        { n: 'Tumblr',      url: `https://${u}.tumblr.com` },
+        { n: 'SoundCloud',  url: `https://soundcloud.com/${u}` },
+        { n: 'Spotify',     url: `https://open.spotify.com/user/${u}` },
+        { n: 'Steam',       url: `https://steamcommunity.com/id/${u}` },
+        { n: 'Roblox',      url: `https://roblox.com/user.aspx?username=${u}` },
+        { n: 'Patreon',     url: `https://patreon.com/${u}` },
+        { n: 'DeviantArt',  url: `https://deviantart.com/${u}` },
+        { n: 'Flickr',      url: `https://flickr.com/people/${u}` },
+        { n: 'Vimeo',       url: `https://vimeo.com/${u}` },
       ];
-      const grid = platforms.map(p => `<div class="tn-platform-link" onclick="loadToolFrame('${p.url}','${p.n} — ${u}')"><div class="tn-platform-dot chk"></div>${p.n}</div>`).join('');
-      document.getElementById('usr-results').style.display = 'block';
-      document.getElementById('usr-results').innerHTML = `<div class="tn-section-lbl">PROFILE LINKS FOR "${u.toUpperCase()}" — click to open in tool panel</div><div class="tn-platform-grid">${grid}</div>`;
+
+      // OSINT tools — not profile URLs, always shown
+      const tools = [
+        { n: 'WhatsMyName',     url: `https://whatsmyname.app/?q=${u}` },
+        { n: 'Sherlock (CLI)',  url: `https://github.com/sherlock-project/sherlock` },
+        { n: 'OSINT Industries',url: `https://osint.industries/` },
+      ];
+
+      const resultsEl = document.getElementById('usr-results');
+      resultsEl.style.display = 'block';
+      resultsEl.innerHTML = `<div class="tn-section-lbl" id="usr-lbl">CHECKING PLATFORMS FOR "${u.toUpperCase()}"…</div><div class="tn-platform-grid" id="usr-grid"></div>`;
+      const grid = document.getElementById('usr-grid');
+
+      // Render tool links immediately
+      tools.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'tn-platform-link';
+        div.onclick = () => loadToolFrame(t.url, `${t.n} — ${u}`);
+        div.innerHTML = `<div class="tn-platform-dot chk"></div>${t.n}`;
+        grid.appendChild(div);
+      });
+
+      // Check all profile platforms in parallel; only render those that respond OK
+      let found = 0;
+      await Promise.allSettled(platforms.map(async p => {
+        try {
+          const r = await proxyFetch(p.api || p.url, 8000);
+          if (r.ok) {
+            found++;
+            const div = document.createElement('div');
+            div.className = 'tn-platform-link';
+            div.onclick = () => loadToolFrame(p.url, `${p.n} — ${u}`);
+            div.innerHTML = `<div class="tn-platform-dot chk"></div>${p.n}`;
+            grid.appendChild(div);
+          }
+        } catch (e) { /* not reachable or 404 — skip */ }
+      }));
+
+      const lbl = document.getElementById('usr-lbl');
+      if (lbl) lbl.textContent = found
+        ? `FOUND "${u.toUpperCase()}" ON ${found} PLATFORM${found !== 1 ? 'S' : ''} — click to open in tool panel`
+        : `NO CONFIRMED PROFILES FOUND FOR "${u.toUpperCase()}" — OSINT tools above may still help`;
+      tnSetLoad('usr', false);
     };
 
     // ─────────────────────────────────────────────────
