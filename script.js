@@ -1,0 +1,3326 @@
+    // OSINT Tactical Dashboard — Main Script
+
+    // ══════════════════════════════════════════════════
+    // CAMERA DATA
+    // ══════════════════════════════════════════════════
+    // Each MJPEG camera has a `sources` array — the player auto-advances
+    // through fallbacks if a URL fails to load.
+    // All insecam cameras are HTTP; they load fine when this file is opened
+    // locally (file://). On HTTPS, use the YouTube/embed cameras instead.
+    const CITIES = {
+
+      // ══════════════ USA ══════════════
+      "New York City": {
+        lat: 40.7128, lng: -74.0060,
+        cameras: [
+          {
+            name: "NYC — Axis Midtown", lat: 40.7580, lng: -73.9855, type: "mjpeg",
+            sources: ["http://208.193.47.61/mjpg/video.mjpg", "http://216.107.197.101:8086/mjpg/video.mjpg", "http://192.119.33.186/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "NYC — Mobotix Uptown", lat: 40.7415, lng: -73.9740, type: "mjpeg",
+            sources: ["http://71.249.87.61/cgi-bin/faststream.jpg?stream=half&fps=15", "http://66.108.22.115/cgi-bin/faststream.jpg?stream=half&fps=15", "http://72.66.178.82/cgi-bin/faststream.jpg?stream=half&fps=15"], src: "Insecam/Mobotix"
+          },
+        ]
+      },
+
+      "Los Angeles": {
+        lat: 34.0522, lng: -118.2437,
+        cameras: [
+          {
+            name: "LA — Axis Hollywood", lat: 34.0928, lng: -118.3287, type: "mjpeg",
+            sources: ["http://66.27.116.187/mjpg/video.mjpg", "http://72.193.189.173:8080/mjpg/video.mjpg", "http://66.75.141.5:8080/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "LA — Panasonic Downtown", lat: 34.0430, lng: -118.2673, type: "mjpeg",
+            sources: ["http://173.164.213.201:8083/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://98.147.54.22:8001/webcapture.jpg?command=snap&channel=1", "http://173.164.213.201:8082/SnapshotJPEG?Resolution=640x480&Quality=Clarity"], src: "Insecam/Panasonic"
+          },
+        ]
+      },
+
+      "Chicago": {
+        lat: 41.8781, lng: -87.6298,
+        cameras: [
+          {
+            name: "Chicago — Axis The Loop", lat: 41.8850, lng: -87.6200, type: "mjpeg",
+            sources: ["http://73.111.173.193/mjpg/video.mjpg", "http://23.123.91.202:50000/cgi-bin/faststream.jpg?stream=half&fps=15", "http://166.152.34.71/nph-jpeg.cgi?0"], src: "Insecam/Axis"
+          },
+          {
+            name: "Chicago — Bosch North Side", lat: 41.8790, lng: -87.6300, type: "mjpeg",
+            sources: ["http://166.165.9.97:8081/snap.jpg?JpegSize=M&JpegCam=1", "http://166.165.9.97:8082/snap.jpg?JpegSize=M&JpegCam=1", "http://104.181.236.93:8082/tmpfs/auto.jpg"], src: "Insecam/Bosch"
+          },
+        ]
+      },
+
+      "Miami / Florida": {
+        lat: 25.7617, lng: -80.1918,
+        cameras: [
+          {
+            name: "Florida — Axis Boca Raton", lat: 26.3683, lng: -80.1289, type: "mjpeg",
+            sources: ["http://174.141.163.166:8080/mjpg/video.mjpg", "http://71.41.107.182/mjpg/video.mjpg", "http://71.41.121.66:8200/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "Florida — Axis Orlando", lat: 28.5383, lng: -81.3792, type: "mjpeg",
+            sources: ["http://97.68.104.34/mjpg/video.mjpg", "http://97.68.208.234:1024/img/video.mjpeg", "http://66.183.186.118/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Las Vegas": {
+        lat: 36.1699, lng: -115.1398,
+        cameras: [
+          {
+            name: "Vegas — Axis The Strip", lat: 36.1147, lng: -115.1728, type: "mjpeg",
+            sources: ["http://68.107.160.109:3000/mjpg/video.mjpg", "http://198.244.125.230:8080/mjpg/video.mjpg", "http://198.244.125.230:8081/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "Vegas — WebcamXP Downtown", lat: 36.1702, lng: -115.1430, type: "mjpeg",
+            sources: ["http://198.71.120.207:8080/cam_1.cgi", "http://198.244.125.230:8083/mjpg/video.mjpg", "http://198.244.125.230:8082/mjpg/video.mjpg"], src: "Insecam/WebcamXP"
+          },
+        ]
+      },
+
+      "San Francisco": {
+        lat: 37.7749, lng: -122.4194,
+        cameras: [
+          {
+            name: "SF — Panasonic SOMA", lat: 37.7785, lng: -122.3893, type: "mjpeg",
+            sources: ["http://173.164.213.201:8083/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://45.21.253.117:8000/mjpg/video.mjpg", "http://96.72.166.84:8000/-wvhttp-01-/GetOneShot?image_size=640x480&frame_count=1000000000"], src: "Insecam/Panasonic"
+          },
+          {
+            name: "SF — Axis Mission District", lat: 37.7599, lng: -122.4148, type: "mjpeg",
+            sources: ["http://67.180.81.178/mjpg/video.mjpg", "http://67.180.81.178:8080/mjpg/video.mjpg", "http://67.180.221.43/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Washington DC": {
+        lat: 38.9072, lng: -77.0369,
+        cameras: [
+          {
+            name: "DC — Axis Capitol Hill", lat: 38.8899, lng: -77.0091, type: "mjpeg",
+            sources: ["http://208.193.47.61/mjpg/video.mjpg", "http://216.107.197.101:8086/mjpg/video.mjpg", "http://129.236.23.32/nph-jpeg.cgi?0"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Texas": {
+        lat: 29.7604, lng: -95.3698,
+        cameras: [
+          {
+            name: "Houston — Linksys", lat: 29.7200, lng: -95.3700, type: "mjpeg",
+            sources: ["http://99.159.106.81/img/video.mjpeg", "http://166.141.236.121:81/cgi-bin/faststream.jpg?stream=half&fps=15", "http://166.252.227.219:81/cgi-bin/faststream.jpg?stream=half&fps=15"], src: "Insecam/Linksys"
+          },
+          {
+            name: "San Antonio — Panasonic", lat: 29.4241, lng: -98.4936, type: "mjpeg",
+            sources: ["http://108.84.74.93:50000/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://166.168.108.33:82/cgi-bin/camera?resolution=640&quality=1&Language=0", "http://108.84.74.93:50001/SnapshotJPEG?Resolution=640x480&Quality=Clarity"], src: "Insecam/Panasonic"
+          },
+        ]
+      },
+
+      "Seattle": {
+        lat: 47.6062, lng: -122.3321,
+        cameras: [
+          {
+            name: "Seattle — Axis Downtown", lat: 47.6062, lng: -122.3321, type: "mjpeg",
+            sources: ["http://76.104.188.225/mjpg/video.mjpg", "http://75.72.193.111/mjpg/video.mjpg", "http://76.104.188.225:8080/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Atlanta": {
+        lat: 33.7490, lng: -84.3880,
+        cameras: [
+          {
+            name: "Atlanta — Axis Midtown", lat: 33.7817, lng: -84.3831, type: "mjpeg",
+            sources: ["http://71.87.175.66/mjpg/video.mjpg", "http://71.87.175.66:8080/mjpg/video.mjpg", "http://75.148.56.209/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Boston": {
+        lat: 42.3601, lng: -71.0589,
+        cameras: [
+          {
+            name: "Boston — Axis Back Bay", lat: 42.3503, lng: -71.0810, type: "mjpeg",
+            sources: ["http://71.62.6.91/mjpg/video.mjpg", "http://71.62.6.91:8080/mjpg/video.mjpg", "http://71.184.131.226:8080/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Denver": {
+        lat: 39.7392, lng: -104.9903,
+        cameras: [
+          {
+            name: "Denver — Axis Downtown", lat: 39.7392, lng: -104.9903, type: "mjpeg",
+            sources: ["http://67.190.152.10/mjpg/video.mjpg", "http://67.190.152.10:8080/mjpg/video.mjpg", "http://71.233.80.58/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Toronto": {
+        lat: 43.6532, lng: -79.3832,
+        cameras: [
+          {
+            name: "Toronto — Axis Downtown", lat: 43.6532, lng: -79.3832, type: "mjpeg",
+            sources: ["http://99.247.21.97/mjpg/video.mjpg", "http://99.247.21.97:8080/mjpg/video.mjpg", "http://206.174.134.46/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      // ══════════════ EUROPE ══════════════
+      "London": {
+        lat: 51.5074, lng: -0.1278,
+        cameras: [
+          {
+            name: "London — Axis Southwark", lat: 51.5033, lng: -0.1196, type: "mjpeg",
+            sources: ["http://82.71.13.178:8080/mjpg/video.mjpg", "http://45.65.86.63:8000/img/video.mjpeg", "http://82.8.176.137:8081/cgi-bin/viewer/video.jpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "London — Megapixel Westminster", lat: 51.5154, lng: -0.1417, type: "mjpeg",
+            sources: ["http://5.226.58.5:9001/jpgmulreq/1/image.jpg?key=1516975535684&lq=1", "http://91.102.60.75:9001/jpgmulreq/1/image.jpg?key=1516975535684&lq=1", "http://82.8.176.137:8080/cgi-bin/viewer/video.jpg"], src: "Insecam/Megapixel"
+          },
+          {
+            name: "Manchester — Axis North", lat: 53.4808, lng: -2.2426, type: "mjpeg",
+            sources: ["http://82.27.60.155/mjpg/video.mjpg", "http://82.27.60.155:8080/mjpg/video.mjpg", "http://91.102.60.75/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Paris": {
+        lat: 48.8566, lng: 2.3522,
+        cameras: [
+          {
+            name: "Paris — Axis Montmartre", lat: 48.8867, lng: 2.3431, type: "mjpeg",
+            sources: ["http://80.14.201.251:8010/mjpg/video.mjpg", "http://80.15.183.96:81/mjpg/video.mjpg", "http://77.140.89.250:83/jpgmulreq/1/image.jpg?key=1516975535684&lq=1"], src: "Insecam/Axis"
+          },
+          {
+            name: "Paris — Mobotix Marais", lat: 48.8588, lng: 2.3562, type: "mjpeg",
+            sources: ["http://81.67.25.88:8080/cgi-bin/faststream.jpg?stream=half&fps=15", "http://86.233.186.187:81/jpgmulreq/1/image.jpg?key=1516975535684&lq=1", "http://90.49.5.247/jpgmulreq/1/image.jpg?key=1516975535684&lq=1"], src: "Insecam/Mobotix"
+          },
+        ]
+      },
+
+      "Germany": {
+        lat: 52.5200, lng: 13.4050,
+        cameras: [
+          {
+            name: "Berlin — Axis Mitte", lat: 52.5200, lng: 13.4050, type: "mjpeg",
+            sources: ["http://89.1.82.42/mjpg/video.mjpg", "http://89.107.164.96:8000/mjpg/video.mjpg", "http://217.91.0.13/cgi-bin/faststream.jpg?stream=half&fps=15"], src: "Insecam/Axis"
+          },
+          {
+            name: "Cologne — Mobotix", lat: 50.9333, lng: 6.9500, type: "mjpeg",
+            sources: ["http://87.139.153.80/cgi-bin/faststream.jpg?stream=half&fps=15", "http://185.146.206.159/cgi-bin/faststream.jpg?stream=half&fps=15", "http://176.95.177.220:8086/jpgmulreq/1/image.jpg?key=1516975535684&lq=1"], src: "Insecam/Mobotix"
+          },
+          {
+            name: "Hamburg — Axis Hafen", lat: 53.5511, lng: 9.9937, type: "mjpeg",
+            sources: ["http://217.91.0.13:8080/mjpg/video.mjpg", "http://89.107.164.96:8080/mjpg/video.mjpg", "http://89.1.82.42:8080/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Netherlands": {
+        lat: 52.3676, lng: 4.9041,
+        cameras: [
+          {
+            name: "Amsterdam — Axis Centrum", lat: 52.3676, lng: 4.9041, type: "mjpeg",
+            sources: ["http://212.115.8.195/mjpg/video.mjpg", "http://212.115.8.195:8080/mjpg/video.mjpg", "http://195.123.208.191/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "Rotterdam — Axis Port", lat: 51.9244, lng: 4.4777, type: "mjpeg",
+            sources: ["http://91.102.60.75:8080/mjpg/video.mjpg", "http://91.102.60.75:8081/mjpg/video.mjpg", "http://195.123.208.191:8081/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Spain": {
+        lat: 40.4168, lng: -3.7038,
+        cameras: [
+          {
+            name: "Barcelona — Mobotix Eixample", lat: 41.3851, lng: 2.1734, type: "mjpeg",
+            sources: ["http://80.32.125.254:8080/cgi-bin/faststream.jpg?stream=half&fps=15", "http://88.26.136.34:81/cgi-bin/faststream.jpg?stream=half&fps=15", "http://88.26.136.34:82/cgi-bin/faststream.jpg?stream=half&fps=15"], src: "Insecam/Mobotix"
+          },
+          {
+            name: "Madrid — Axis Centro", lat: 40.4168, lng: -3.7038, type: "mjpeg",
+            sources: ["http://88.26.136.34/mjpg/video.mjpg", "http://88.26.136.34:8080/mjpg/video.mjpg", "http://88.15.136.14/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      "Scandinavia": {
+        lat: 59.3293, lng: 18.0686,
+        cameras: [
+          {
+            name: "Stockholm — Axis Gamla Stan", lat: 59.3293, lng: 18.0686, type: "mjpeg",
+            sources: ["http://83.250.196.240/mjpg/video.mjpg", "http://83.250.196.240:8080/mjpg/video.mjpg", "http://86.50.225.136/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "Oslo — Panasonic Sentrum", lat: 59.9139, lng: 10.7522, type: "mjpeg",
+            sources: ["http://86.50.225.136:50000/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://83.92.162.20/mjpg/video.mjpg", "http://80.163.245.64/mjpg/video.mjpg"], src: "Insecam/Panasonic"
+          },
+        ]
+      },
+
+      "Eastern Europe": {
+        lat: 52.2297, lng: 21.0122,
+        cameras: [
+          {
+            name: "Warsaw — Axis Centrum", lat: 52.2297, lng: 21.0122, type: "mjpeg",
+            sources: ["http://83.17.175.43/mjpg/video.mjpg", "http://83.17.175.43:8080/mjpg/video.mjpg", "http://88.103.131.27/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "Prague — Axis Václavák", lat: 50.0755, lng: 14.4378, type: "mjpeg",
+            sources: ["http://88.103.131.27:8080/mjpg/video.mjpg", "http://85.126.22.164/mjpg/video.mjpg", "http://88.103.131.27:8081/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      // ══════════════ ASIA-PACIFIC ══════════════
+      "Japan": {
+        lat: 35.6762, lng: 139.6503,
+        cameras: [
+          {
+            name: "Tokyo — Panasonic Shinjuku", lat: 35.6938, lng: 139.7034, type: "mjpeg",
+            sources: ["http://202.245.13.81/cgi-bin/camera?resolution=640&quality=1&Language=0", "http://220.254.72.200/cgi-bin/camera?resolution=640&quality=1&Language=0", "http://115.179.100.76:8080/SnapshotJPEG?Resolution=640x480&Quality=Clarity"], src: "Insecam/Panasonic"
+          },
+          {
+            name: "Tokyo — Axis Shibuya", lat: 35.6580, lng: 139.7016, type: "mjpeg",
+            sources: ["http://153.156.20.243/mjpg/video.mjpg", "http://114.179.127.11:8002/mjpg/video.mjpg", "http://218.219.228.113/cgi-bin/camera?resolution=640&quality=1&Language=0"], src: "Insecam/Axis"
+          },
+          {
+            name: "Tokyo — Megapixel Akihabara", lat: 35.7022, lng: 139.7744, type: "mjpeg",
+            sources: ["http://202.216.1.24:83/jpgmulreq/1/image.jpg?key=1516975535684&lq=1", "http://61.115.115.49:8081/-wvhttp-01-/GetOneShot?image_size=640x480&frame_count=1000000000", "http://202.216.1.24:82/jpgmulreq/1/image.jpg?key=1516975535684&lq=1"], src: "Insecam/Megapixel"
+          },
+        ]
+      },
+
+      "South Korea": {
+        lat: 37.5665, lng: 126.9780,
+        cameras: [
+          {
+            name: "Seoul — Panasonic Gangnam", lat: 37.4979, lng: 127.0276, type: "mjpeg",
+            sources: ["http://211.43.12.148/cgi-bin/camera?resolution=640&quality=1&Language=0", "http://211.43.12.148:8080/cgi-bin/camera?resolution=640&quality=1&Language=0", "http://211.43.12.148:50000/SnapshotJPEG?Resolution=640x480&Quality=Clarity"], src: "Insecam/Panasonic"
+          },
+        ]
+      },
+
+      "Australia": {
+        lat: -33.8688, lng: 151.2093,
+        cameras: [
+          {
+            name: "Sydney — Axis CBD", lat: -33.8688, lng: 151.2093, type: "mjpeg",
+            sources: ["http://59.167.160.158/mjpg/video.mjpg", "http://59.167.160.158:8080/mjpg/video.mjpg", "http://101.173.29.152/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "Melbourne — Panasonic Southbank", lat: -37.8136, lng: 144.9631, type: "mjpeg",
+            sources: ["http://101.173.29.152:50000/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://101.173.29.152:50001/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://59.154.231.71/mjpg/video.mjpg"], src: "Insecam/Panasonic"
+          },
+        ]
+      },
+
+      // ══════════════ MIDDLE EAST ══════════════
+      "Middle East": {
+        lat: 41.0082, lng: 28.9784,
+        cameras: [
+          {
+            name: "Istanbul — Axis Beyoğlu", lat: 41.0082, lng: 28.9784, type: "mjpeg",
+            sources: ["http://195.175.254.18/mjpg/video.mjpg", "http://195.175.254.18:8080/mjpg/video.mjpg", "http://195.175.254.18:8081/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      // ══════════════ LATAM ══════════════
+      "South America": {
+        lat: -23.5505, lng: -46.6333,
+        cameras: [
+          {
+            name: "São Paulo — Panasonic Paulista", lat: -23.5505, lng: -46.6333, type: "mjpeg",
+            sources: ["http://187.95.152.34:50000/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://187.95.152.34:50001/SnapshotJPEG?Resolution=640x480&Quality=Clarity", "http://200.236.192.41/mjpg/video.mjpg"], src: "Insecam/Panasonic"
+          },
+          {
+            name: "Buenos Aires — Axis Palermo", lat: -34.6037, lng: -58.3816, type: "mjpeg",
+            sources: ["http://186.136.152.50/mjpg/video.mjpg", "http://186.136.152.50:8080/mjpg/video.mjpg", "http://186.136.152.50:8081/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+          {
+            name: "Mexico City — Axis Polanco", lat: 19.4326, lng: -99.1332, type: "mjpeg",
+            sources: ["http://200.68.149.226/mjpg/video.mjpg", "http://200.68.149.226:8080/mjpg/video.mjpg", "http://200.68.149.226:8081/mjpg/video.mjpg"], src: "Insecam/Axis"
+          },
+        ]
+      },
+
+      // ══════════════ GLOBAL ══════════════
+      "Global / Space": {
+        lat: 0, lng: 0,
+        cameras: [
+          {
+            name: "NASA ISS — Earth View Live", lat: 0, lng: 0, type: "live",
+            embed: "https://www.youtube.com/embed/P9C25Un7xaM?autoplay=1&mute=1", src: "NASA"
+          },
+          {
+            name: "Windy — Global Weather Map", lat: 51.5, lng: 10, type: "live",
+            embed: "https://embed.windy.com/embed2.html?lat=40&lon=10&zoom=3&level=surface&overlay=wind", src: "Windy.com"
+          },
+        ]
+      },
+    };
+
+    // ══════════════════════════════════════════════════
+    // TOOLS DATA
+    // ══════════════════════════════════════════════════
+    const TOOLS_DATA = {
+      "PEOPLE SEARCH": [
+        { n: "Username Search", native: "nativeUsernameSearch", desc: "Check 30+ platforms for any username" },
+        { n: "People Finder Hub", native: "nativePeopleFinder", desc: "Search TruePeopleSearch, Spokeo, Pipl aggregated" },
+        { n: "Email Breach Check", native: "nativeHIBP", desc: "Have I Been Pwned — check email in known breaches" },
+      ],
+      "IMAGE & MEDIA": [
+        { n: "Reverse Image Search", native: "nativeReverseImage", desc: "TinEye · Google Lens · Yandex · Bing Visual" },
+        { n: "YouTube Metadata", native: "nativeYTMeta", desc: "Extract title, author, thumbnail from any YT URL" },
+        { n: "InVID / WeVerify", u: "https://www.invid-project.eu/tools-and-services/invid-verification-plugin/", desc: "Video verification plugin info" },
+      ],
+      "DOMAINS & IP": [
+        { n: "IP / Domain Lookup", native: "nativeIPLookup", desc: "Geolocation, ASN, ISP for any IP or domain" },
+        { n: "WHOIS / RDAP", native: "nativeWHOIS", desc: "Domain registration, registrar, expiry, nameservers" },
+        { n: "DNS Lookup", native: "nativeDNS", desc: "Query A, AAAA, MX, NS, TXT, CNAME records" },
+        { n: "SSL Certificate Search", native: "nativeCertSearch", desc: "Certificate Transparency logs via crt.sh" },
+        { n: "Bulk IP Scan", native: "nativeBulkIP", desc: "Batch geolocation for up to 20 IPs at once" },
+        { n: "Shodan Search", native: "nativeShodanSearch", desc: "Device intelligence and open port data" },
+        { n: "Censys", native: "nativeCensys", desc: "Internet-wide scan data and certificates" },
+        { n: "VirusTotal", native: "nativeVirusTotal", desc: "Scan URLs, domains, IPs, and files for threats" },
+        { n: "AbuseIPDB", native: "nativeAbuseIPDB", desc: "Community-sourced IP abuse and threat data" },
+      ],
+      "SOCIAL MEDIA": [
+        { n: "Social Media Search", native: "nativeSocialSearch", desc: "Search Twitter/X, Reddit, Instagram, LinkedIn" },
+        { n: "Reddit Search", native: "nativeRedditSearch", desc: "Full-text Reddit search via Pushshift/Unddit" },
+        { n: "Intelligence X", u: "https://intelx.io", desc: "Deep web, breaches, dark web, Tor search" },
+      ],
+      "GEOLOCATION": [
+        { n: "SunCalc", native: "nativeSunCalc", desc: "Sun position, shadow direction, and times for any date/location" },
+        { n: "Overpass / OSM Query", native: "nativeOverpass", desc: "Query OpenStreetMap features by tag/area" },
+        { n: "Google Earth", native: "nativeGEarth", desc: "Satellite imagery and 3D terrain" },
+        { n: "Sentinel EO Browser", native: "nativeSentinel", desc: "Multi-spectral satellite imagery" },
+        { n: "GeoGuessr Tools", native: "nativeGeoTools", desc: "Geolocation helper resources" },
+      ],
+      "FLIGHT & VESSEL": [
+        { n: "ADS-B Exchange", native: "nativeADSB", desc: "Unfiltered real-time global flight tracking" },
+        { n: "FlightRadar24", native: "nativeFR24Tool", desc: "Commercial flight tracking with airline data" },
+        { n: "MarineTraffic", native: "nativeMarineTraffic", desc: "Live AIS vessel positions worldwide" },
+        { n: "VesselFinder", native: "nativeVesselFinder", desc: "Vessel tracking and port arrival data" },
+        { n: "OpenSky Network", native: "nativeOpenSky", desc: "Open ADS-B data network and historical flights" },
+      ],
+      "ARCHIVES & BREACH": [
+        { n: "Wayback Machine", native: "nativeWayback", desc: "Web archive CDX search and snapshot browser" },
+        { n: "Email Breach Check", native: "nativeHIBP", desc: "Have I Been Pwned breach database" },
+        { n: "Pastebin Search", native: "nativePasteSearch", desc: "Search Pastebin and paste sites via psbdmp.ws" },
+        { n: "Dehashed", u: "https://dehashed.com", desc: "Leaked credential database search" },
+        { n: "GhostProject", u: "https://ghostproject.fr", desc: "Leaked passwords and credential search" },
+      ],
+      "FRAMEWORKS": [
+        { n: "OSINT Framework", native: "nativeFramework", desc: "Comprehensive OSINT tool index by category" },
+        { n: "Bellingcat Toolkit", native: "nativeBellingcat", desc: "Investigative journalism tool collection" },
+        { n: "Maltego CE", native: "nativeMaltego", desc: "Link analysis and entity relationship mapping" },
+        { n: "Hunter.io", native: "nativeHunter", desc: "Find and verify professional email addresses" },
+        { n: "Holehe", native: "nativeHolehe", desc: "Check if email is registered on 120+ sites" },
+      ],
+    };
+
+    // ══════════════════════════════════════════════════
+
+    // ══════════════════════════════════════════════════
+    // METADATA — Phone Lookup
+    // ══════════════════════════════════════════════════
+
+    // US/Canada NPA (area code) → State/Province — inline, zero-dependency
+    const NPA_STATE = {
+      '201': 'NJ', '202': 'DC', '203': 'CT', '204': 'MB', '205': 'AL', '206': 'WA', '207': 'ME', '208': 'ID',
+      '209': 'CA', '210': 'TX', '212': 'NY', '213': 'CA', '214': 'TX', '215': 'PA', '216': 'OH', '217': 'IL',
+      '218': 'MN', '219': 'IN', '220': 'OH', '223': 'PA', '224': 'IL', '225': 'LA', '226': 'ON', '228': 'MS',
+      '229': 'GA', '231': 'MI', '234': 'OH', '236': 'BC', '239': 'FL', '240': 'MD', '248': 'MI', '249': 'ON',
+      '250': 'BC', '251': 'AL', '252': 'NC', '253': 'WA', '254': 'TX', '256': 'AL', '260': 'IN', '262': 'WI',
+      '267': 'PA', '269': 'MI', '270': 'KY', '272': 'PA', '274': 'WI', '276': 'VA', '279': 'CA', '281': 'TX',
+      '289': 'ON', '301': 'MD', '302': 'DE', '303': 'CO', '304': 'WV', '305': 'FL', '306': 'SK', '307': 'WY',
+      '308': 'NE', '309': 'IL', '310': 'CA', '312': 'IL', '313': 'MI', '314': 'MO', '315': 'NY', '316': 'KS',
+      '317': 'IN', '318': 'LA', '319': 'IA', '320': 'MN', '321': 'FL', '323': 'CA', '325': 'TX', '330': 'OH',
+      '331': 'IL', '332': 'NY', '334': 'AL', '336': 'NC', '337': 'LA', '339': 'MA', '340': 'VI', '341': 'CA',
+      '343': 'ON', '346': 'TX', '347': 'NY', '351': 'MA', '352': 'FL', '360': 'WA', '361': 'TX', '364': 'KY',
+      '365': 'ON', '380': 'OH', '385': 'UT', '386': 'FL', '401': 'RI', '402': 'NE', '403': 'AB', '404': 'GA',
+      '405': 'OK', '406': 'MT', '407': 'FL', '408': 'CA', '409': 'TX', '410': 'MD', '412': 'PA', '413': 'MA',
+      '414': 'WI', '415': 'CA', '416': 'ON', '417': 'MO', '418': 'QC', '419': 'OH', '423': 'TN', '424': 'CA',
+      '425': 'WA', '430': 'TX', '431': 'MB', '432': 'TX', '434': 'VA', '435': 'UT', '437': 'ON', '438': 'QC',
+      '440': 'OH', '442': 'CA', '443': 'MD', '445': 'PA', '447': 'IL', '448': 'FL', '450': 'QC', '458': 'OR',
+      '463': 'IN', '464': 'IL', '469': 'TX', '470': 'GA', '472': 'NC', '475': 'CT', '478': 'GA', '479': 'AR',
+      '480': 'AZ', '484': 'PA', '501': 'AR', '502': 'KY', '503': 'OR', '504': 'LA', '505': 'NM', '506': 'NB',
+      '507': 'MN', '508': 'MA', '509': 'WA', '510': 'CA', '512': 'TX', '513': 'OH', '514': 'QC', '515': 'IA',
+      '516': 'NY', '517': 'MI', '518': 'NY', '519': 'ON', '520': 'AZ', '530': 'CA', '531': 'NE', '539': 'OK',
+      '540': 'VA', '541': 'OR', '551': 'NJ', '559': 'CA', '561': 'FL', '562': 'CA', '563': 'IA', '564': 'WA',
+      '567': 'OH', '570': 'PA', '571': 'VA', '572': 'OK', '573': 'MO', '574': 'IN', '575': 'NM', '580': 'OK',
+      '582': 'PA', '585': 'NY', '586': 'MI', '587': 'AB', '601': 'MS', '602': 'AZ', '603': 'NH', '604': 'BC',
+      '605': 'SD', '606': 'KY', '607': 'NY', '608': 'WI', '609': 'NJ', '610': 'PA', '612': 'MN', '613': 'ON',
+      '614': 'OH', '615': 'TN', '616': 'MI', '617': 'MA', '618': 'IL', '619': 'CA', '620': 'KS', '623': 'AZ',
+      '626': 'CA', '628': 'CA', '629': 'TN', '630': 'IL', '631': 'NY', '636': 'MO', '641': 'IA', '646': 'NY',
+      '647': 'ON', '649': 'TC', '650': 'CA', '651': 'MN', '657': 'CA', '660': 'MO', '661': 'CA', '662': 'MS',
+      '667': 'MD', '669': 'CA', '670': 'MP', '671': 'GU', '678': 'GA', '680': 'NY', '681': 'WV', '682': 'TX',
+      '689': 'FL', '701': 'ND', '702': 'NV', '703': 'VA', '704': 'NC', '705': 'ON', '706': 'GA', '707': 'CA',
+      '708': 'IL', '709': 'NL', '712': 'IA', '713': 'TX', '714': 'CA', '715': 'WI', '716': 'NY', '717': 'PA',
+      '718': 'NY', '719': 'CO', '720': 'CO', '724': 'PA', '725': 'NV', '726': 'TX', '727': 'FL', '730': 'IL',
+      '731': 'TN', '732': 'NJ', '734': 'MI', '737': 'TX', '740': 'OH', '743': 'NC', '747': 'CA', '752': 'CA',
+      '754': 'FL', '757': 'VA', '760': 'CA', '762': 'GA', '763': 'MN', '764': 'CA', '765': 'IN', '769': 'MS',
+      '770': 'GA', '771': 'VA', '772': 'FL', '773': 'IL', '774': 'MA', '775': 'NV', '779': 'IL', '780': 'AB',
+      '781': 'MA', '782': 'NS', '785': 'KS', '786': 'FL', '787': 'PR', '800': 'TF', '801': 'UT', '802': 'VT',
+      '803': 'SC', '804': 'VA', '805': 'CA', '806': 'TX', '807': 'ON', '808': 'HI', '810': 'MI', '812': 'IN',
+      '813': 'FL', '814': 'PA', '815': 'IL', '816': 'MO', '817': 'TX', '818': 'CA', '819': 'QC', '820': 'CA',
+      '825': 'AB', '828': 'NC', '830': 'TX', '831': 'CA', '832': 'TX', '833': 'TF', '835': 'PA', '838': 'NY',
+      '840': 'CA', '843': 'SC', '845': 'NY', '847': 'IL', '848': 'NJ', '850': 'FL', '854': 'SC', '855': 'TF',
+      '856': 'NJ', '857': 'MA', '858': 'CA', '859': 'KY', '860': 'CT', '861': 'CA', '862': 'NJ', '863': 'FL',
+      '864': 'SC', '865': 'TN', '866': 'TF', '867': 'YT', '870': 'AR', '872': 'IL', '873': 'QC', '877': 'TF',
+      '878': 'PA', '888': 'TF', '901': 'TN', '902': 'NS', '903': 'TX', '904': 'FL', '905': 'ON', '906': 'MI',
+      '907': 'AK', '908': 'NJ', '909': 'CA', '910': 'NC', '912': 'GA', '913': 'KS', '914': 'NY', '915': 'TX',
+      '916': 'CA', '917': 'NY', '918': 'OK', '919': 'NC', '920': 'WI', '925': 'CA', '928': 'AZ', '929': 'NY',
+      '930': 'IN', '931': 'TN', '934': 'NY', '936': 'TX', '937': 'OH', '938': 'AL', '940': 'TX', '941': 'FL',
+      '947': 'MI', '949': 'CA', '951': 'CA', '952': 'MN', '954': 'FL', '956': 'TX', '959': 'CT', '970': 'CO',
+      '971': 'OR', '972': 'TX', '973': 'NJ', '975': 'MO', '978': 'MA', '979': 'TX', '980': 'NC', '984': 'NC',
+      '985': 'LA', '986': 'ID', '989': 'MI',
+    };
+
+    const STATE_NAME = {
+      'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California', 'CO': 'Colorado',
+      'CT': 'Connecticut', 'DE': 'Delaware', 'DC': 'Washington D.C.', 'FL': 'Florida', 'GA': 'Georgia',
+      'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts',
+      'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri', 'MT': 'Montana',
+      'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico',
+      'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+      'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina', 'SD': 'South Dakota',
+      'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington',
+      'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming', 'PR': 'Puerto Rico', 'VI': 'U.S. Virgin Islands',
+      'GU': 'Guam', 'MP': 'Northern Mariana Islands',
+      // Canadian provinces
+      'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba', 'NB': 'New Brunswick', 'NL': 'Newfoundland',
+      'NS': 'Nova Scotia', 'ON': 'Ontario', 'PE': 'Prince Edward Island', 'QC': 'Quebec', 'SK': 'Saskatchewan',
+      'YT': 'Yukon', 'NT': 'Northwest Territories', 'NU': 'Nunavut',
+      'TF': 'Toll-Free (US)',
+    };
+
+    async function lookupPhone() {
+      const raw = document.getElementById('phone-input').value.trim();
+      if (!raw) { return; }
+      setMetaLoading('phone', true);
+      document.getElementById('phone-results').style.display = 'none';
+      clearMetaErr('phone');
+      try {
+        const num = raw.replace(/[\s\-\(\)\.]/g, '');
+
+        // ── Calling code → country map ──
+        const CALLING = {
+          '1': 'United States / Canada', '7': 'Russia / Kazakhstan', '20': 'Egypt', '27': 'South Africa',
+          '30': 'Greece', '31': 'Netherlands', '32': 'Belgium', '33': 'France', '34': 'Spain', '36': 'Hungary',
+          '39': 'Italy', '40': 'Romania', '41': 'Switzerland', '43': 'Austria', '44': 'United Kingdom',
+          '45': 'Denmark', '46': 'Sweden', '47': 'Norway', '48': 'Poland', '49': 'Germany', '51': 'Peru',
+          '52': 'Mexico', '53': 'Cuba', '54': 'Argentina', '55': 'Brazil', '56': 'Chile', '57': 'Colombia',
+          '58': 'Venezuela', '60': 'Malaysia', '61': 'Australia', '62': 'Indonesia', '63': 'Philippines',
+          '64': 'New Zealand', '65': 'Singapore', '66': 'Thailand', '81': 'Japan', '82': 'South Korea',
+          '84': 'Vietnam', '86': 'China', '90': 'Turkey', '91': 'India', '92': 'Pakistan', '98': 'Iran',
+          '212': 'Morocco', '213': 'Algeria', '216': 'Tunisia', '218': 'Libya', '234': 'Nigeria',
+          '254': 'Kenya', '256': 'Uganda', '351': 'Portugal', '353': 'Ireland', '358': 'Finland',
+          '359': 'Bulgaria', '380': 'Ukraine', '420': 'Czech Republic', '972': 'Israel', '966': 'Saudi Arabia',
+          '971': 'UAE', '965': 'Kuwait', '964': 'Iraq', '880': 'Bangladesh', '886': 'Taiwan', '852': 'Hong Kong',
+        };
+
+        const stripped = num.replace(/^\+/, '');
+        let callingCode = '–', countryFromCode = '–';
+        for (const len of [3, 2, 1]) {
+          const code = stripped.slice(0, len);
+          if (CALLING[code]) { callingCode = '+' + code; countryFromCode = CALLING[code]; break; }
+        }
+
+        let formatted_intl = num, formatted_local = '–', valid = '–', countryCode = '–', lineType = '–';
+
+        // ── 1. libphonenumber-js ──
+        if (!window.libphonenumber) {
+          try {
+            await new Promise((res, rej) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.4/bundle/libphonenumber-min.js';
+              s.onload = res; s.onerror = rej;
+              document.head.appendChild(s);
+            });
+          } catch (e) { console.warn('libphonenumber CDN failed'); }
+        }
+        if (window.libphonenumber) {
+          try {
+            const parsed = window.libphonenumber.parsePhoneNumber(num.startsWith('+') ? num : '+' + num);
+            if (parsed) {
+              formatted_intl = parsed.formatInternational();
+              formatted_local = parsed.formatNational();
+              valid = parsed.isValid() ? '✓ Yes' : '✗ No';
+              countryCode = parsed.country || countryCode;
+              const rawType = parsed.getType();
+              const typeMap = {
+                MOBILE: 'Mobile', FIXED_LINE: 'Fixed Line', FIXED_LINE_OR_MOBILE: 'Fixed or Mobile',
+                TOLL_FREE: 'Toll Free', PREMIUM_RATE: 'Premium Rate', VOIP: 'VoIP',
+                SHARED_COST: 'Shared Cost', PERSONAL_NUMBER: 'Personal Number', PAGER: 'Pager'
+              };
+              lineType = rawType ? (typeMap[rawType] || rawType) : '–';
+              if (callingCode === '–' && parsed.countryCallingCode) callingCode = '+' + parsed.countryCallingCode;
+            }
+          } catch (e) { console.warn('libphonenumber parse:', e.message); }
+        }
+
+        let countryName = countryFromCode, phoneLoc = '–';
+        const isNorthAmerica = stripped.startsWith('1') && stripped.length === 11;
+
+        // ── 2. US/Canada region from inline NPA table ──
+        if (isNorthAmerica) {
+          const npa = stripped.slice(1, 4);
+          const stateCode = NPA_STATE[npa];
+          if (stateCode) phoneLoc = STATE_NAME[stateCode] || stateCode;
+        }
+
+        // ── 3. veriphone.io — country name + region supplement ──
+        const phoneQuery = formatted_intl !== num ? formatted_intl : num;
+        try {
+          const vr = await proxyFetch(`https://api.veriphone.io/v2/verify?phone=${encodeURIComponent(phoneQuery)}&key=demo`, 7000);
+          const vd = await vr.json();
+          if (vd) {
+            if (vd.country && vd.country !== 'Unknown') countryName = vd.country;
+            if (vd.phone_region && vd.phone_region !== 'Unknown' && phoneLoc === '–') phoneLoc = vd.phone_region;
+            if (vd.phone_type && vd.phone_type !== 'unknown' && lineType === '–') lineType = vd.phone_type;
+            if (vd.phone_valid != null && valid === '–') valid = vd.phone_valid ? '✓ Yes' : '✗ No';
+          }
+        } catch (e) { console.warn('veriphone:', e.message); }
+
+        const rows = [
+          ['Number', formatted_intl],
+          ['Valid', valid],
+          ['Country', countryName],
+          ['Calling Code', callingCode],
+          ['Region / State', phoneLoc],
+          ['Line Type', lineType],
+          ['Intl Format', formatted_intl],
+          ['Local Format', formatted_local],
+        ];
+        document.getElementById('phone-grid').innerHTML = rows.map(([k, v]) =>
+          `<div class="meta-key">${k}</div><div class="meta-val">${v || '–'}</div>`
+        ).join('');
+
+        // ── External lookup links ──
+        const enc = encodeURIComponent(formatted_intl !== num ? formatted_intl : num);
+        const plain = encodeURIComponent(stripped);
+        const extLinks = [
+          { label: 'NumLookup', url: `https://www.numlookup.com/?number=${enc}` },
+          { label: 'Truecaller', url: `https://www.truecaller.com/search/us/${enc}` },
+          { label: '800Notes', url: `https://800notes.com/Phone.aspx/${plain}` },
+          { label: 'WhoCalledMe', url: `https://whocalledme.com/PhoneNumber/${plain}` },
+          { label: 'SpyDialer', url: `https://www.spydialer.com/default.aspx` },
+          { label: 'PhoneInfoga', url: `https://demo.phoneinfoga.crvx.fr/#/` },
+        ];
+        document.getElementById('phone-ext-links').innerHTML = extLinks.map(l =>
+          `<a href="${l.url}" target="_blank" style="display:inline-block;padding:4px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:3px;color:var(--blue);font-size:10px;text-decoration:none;font-family:var(--mono)">${l.label} →</a>`
+        ).join('');
+
+        document.getElementById('phone-results').style.display = 'block';
+      } catch (e) { showMetaErr('phone', e.message); }
+      finally { setMetaLoading('phone', false); }
+    }
+
+    // ══════════════════════════════════════════════════
+    // METADATA — Carrier Lookup (separate, uses carrierlookup.com API)
+    // ══════════════════════════════════════════════════
+    async function lookupCarrier() {
+      const raw = document.getElementById('carrier-input').value.trim();
+      if (!raw) { return; }
+      setMetaLoading('carrier', true);
+      document.getElementById('carrier-results').style.display = 'none';
+      clearMetaErr('carrier');
+      try {
+        const num = raw.replace(/[\s\-\(\)\.+]/g, '');
+        const stripped = num.length === 10 ? '1' + num : num;
+        const isNA = stripped.startsWith('1') && stripped.length === 11;
+
+        let carrier = '–', lineType = '–', active = '–', ratecenter = '–', state = '–';
+
+        if (!isNA) throw new Error('Carrier lookup currently supports US and Canada numbers only.');
+
+        const npa = stripped.slice(1, 4), nxx = stripped.slice(4, 7);
+        const lcgUrl = `https://localcallingguide.com/xmlprefix.php?npa=${npa}&nxx=${nxx}`;
+
+        // Only use proxies that work from null origin: corsproxy.io and codetabs
+        const lcgSources = [
+          `https://corsproxy.io/?url=${encodeURIComponent(lcgUrl)}`,
+          `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(lcgUrl)}`,
+        ];
+
+        let gotData = false;
+        for (const proxyUrl of lcgSources) {
+          try {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 9000);
+            const r = await fetch(proxyUrl);
+            clearTimeout(t);
+            if (!r.ok) { console.warn('LCG proxy HTTP', r.status, proxyUrl); continue; }
+            let text = await r.text();
+            console.log('LCG raw response preview:', text.slice(0, 200));
+
+            // codetabs sometimes wraps in JSON {contents: "..."} — unwrap it
+            if (text.trim().startsWith('{')) {
+              try { const j = JSON.parse(text); if (j.contents) text = j.contents; } catch (e) { }
+            }
+            // Reject HTML error pages
+            if (text.trim().startsWith('<html') || text.trim().startsWith('<!DOCTYPE')) continue;
+
+            const get = tag => { const m = text.match(new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'i')); return m ? m[1].trim() : ''; };
+            const lec = get('lec');
+            if (!lec) { console.warn('No lec tag found in response'); continue; }
+
+            carrier = lec;
+            const rcVal = get('rc'); const stateVal = get('state'); const tzVal = get('timezone');
+            const ilecVal = get('ilec-name') || get('isnlata');
+            lineType = get('ilt') === 'Y' ? 'Fixed Line (ILT)' : 'Fixed / Mobile';
+            if (stateVal) state = STATE_NAME[stateVal] || stateVal;
+            if (rcVal) ratecenter = stateVal ? `${rcVal}, ${STATE_NAME[stateVal] || stateVal}` : rcVal;
+            if (tzVal) ratecenter += ratecenter !== '–' ? ` (${tzVal})` : '';
+            gotData = true;
+            break;
+          } catch (e) { console.warn('LCG source failed:', e.message); }
+        }
+
+        if (!gotData) throw new Error('Could not retrieve carrier data — both lookup services unavailable. Try again shortly.');
+
+        const rows = [
+          ['Carrier', carrier],
+          ['Line Type', lineType],
+          ['State', state],
+          ['Rate Center', ratecenter],
+          ['NPA-NXX', `${npa}-${nxx}`],
+        ];
+        document.getElementById('carrier-grid').innerHTML = rows.map(([k, v]) =>
+          `<div class="meta-key">${k}</div><div class="meta-val">${v || '–'}</div>`
+        ).join('');
+        document.getElementById('carrier-results').style.display = 'block';
+      } catch (e) {
+        showMetaErr('carrier', e.message);
+      } finally {
+        setMetaLoading('carrier', false);
+      }
+    }
+
+    // ══════════════════════════════════════════════════
+    // METADATA — WHOIS / RDAP
+    // ══════════════════════════════════════════════════
+    async function lookupWhois() {
+      const raw = document.getElementById('whois-input').value.trim().replace(/^https?:\/\//, '').split('/')[0].toLowerCase();
+      if (!raw) { showMetaErr('whois', 'Enter a domain name'); return; }
+      setMetaLoading('whois', true);
+      document.getElementById('whois-results').style.display = 'none';
+      clearMetaErr('whois');
+      try {
+        const r = await Promise.race([
+          fetch(`https://rdap.org/domain/${raw}`),
+          new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 8000))
+        ]);
+        if (!r.ok) throw new Error('Domain not found in RDAP registry');
+        const j = await r.json();
+        const getEvDate = (type) => { const ev = (j.events || []).find(e => e.eventAction === type); return ev ? ev.eventDate?.slice(0, 10) : '–'; };
+        const getOrg = (role) => { const ent = (j.entities || []).find(e => (e.roles || []).includes(role)); if (!ent) return '–'; const vc = ent.vcardArray?.[1] || []; const fn = vc.find(v => v[0] === 'fn'); return fn ? fn[3] : '–'; };
+        const rows = [
+          ['Domain', j.ldhName || raw],
+          ['Status', (j.status || []).join(', ') || '–'],
+          ['Registered', getEvDate('registration')],
+          ['Updated', getEvDate('last changed')],
+          ['Expiry', getEvDate('expiration')],
+          ['Registrant', getOrg('registrant')],
+          ['Registrar', getOrg('registrar')],
+          ['Registry', j.port43 || '–'],
+        ];
+        document.getElementById('whois-grid').innerHTML = rows.map(([k, v]) => `<div class="meta-key">${k}</div><div class="meta-val">${v}</div>`).join('');
+        const nsList = (j.nameservers || []).map(n => n.ldhName || n.unicodeName || '?');
+        if (nsList.length) {
+          document.getElementById('whois-ns').innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.8">${nsList.join('<br>')}</div>`;
+          document.getElementById('whois-ns-card').style.display = 'block';
+        }
+        document.getElementById('whois-results').style.display = 'block';
+      } catch (e) { showMetaErr('whois', e.message); }
+      finally { setMetaLoading('whois', false); }
+    }
+
+    // ══════════════════════════════════════════════════
+    // METADATA — Bulk IP Scan
+    // ══════════════════════════════════════════════════
+    async function runBulkIP() {
+      const raw = document.getElementById('bulk-input').value.trim();
+      if (!raw) { return; }
+      const ips = raw.split('\n').map(s => s.trim()).filter(s => s && /^[\d\.a-fA-F:]+$/.test(s)).slice(0, 20);
+      if (!ips.length) { showMetaErr('bulk', 'No valid IP addresses found'); return; }
+      setMetaLoading('bulk', true);
+      document.getElementById('bulk-results').style.display = 'none';
+      clearMetaErr('bulk');
+      const results = [];
+      for (const ip of ips) {
+        try {
+          const r = await Promise.race([
+            fetch(`https://ipapi.co/${ip}/json/`),
+            new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 5000))
+          ]);
+          const d = await r.json();
+          results.push({ ip, country: d.country_name || '–', asn: d.asn || '–', org: d.org || '–', city: d.city || '', ok: true });
+        } catch (e) {
+          results.push({ ip, country: 'ERROR', asn: '–', org: e.message, ok: false });
+        }
+      }
+      document.getElementById('bulk-rows').innerHTML = results.map(r => `
+    <div class="bulk-row${r.ok ? '' : ' err'}">
+      <div style="color:var(--g)">${r.ip}</div>
+      <div>${r.country}</div>
+      <div>${r.asn}</div>
+      <div>${r.org}${r.city ? ' · ' + r.city : ''}</div>
+    </div>`).join('');
+      document.getElementById('bulk-results').style.display = 'block';
+      setMetaLoading('bulk', false);
+    }
+
+    // RADIO STATIONS
+    // ══════════════════════════════════════════════════
+    // Types:
+    //   stream  — direct audio URL played in <audio> tag (HTTPS = works everywhere; HTTP = works from file://)
+    //   embed   — iframe player (OpenMHz scanners — works everywhere, no login needed)
+    //   link    — external only (Broadcastify premium — can't be embedded without account)
+    const STATIONS = [
+
+      // ══ POLICE / FIRE SCANNER — OpenMHz Live API (api.openmhz.com) ══
+      // shortName drives GET api.openmhz.com/{shortName}/calls → streams real talkgroup audio
+      { cat: "POLICE / FIRE SCANNER", name: "NYPD All Boroughs", meta: "New York City Police", type: "scanner", shortName: "nypd" },
+      { cat: "POLICE / FIRE SCANNER", name: "FDNY Manhattan", meta: "New York City Fire Dept", type: "scanner", shortName: "fdny" },
+      { cat: "POLICE / FIRE SCANNER", name: "Chicago Police CPD", meta: "All Zones", type: "scanner", shortName: "chi_cpd" },
+      { cat: "POLICE / FIRE SCANNER", name: "Chicago Fire CFD", meta: "All Districts", type: "scanner", shortName: "chi_cfd" },
+      { cat: "POLICE / FIRE SCANNER", name: "Boston Police BPD", meta: "All Districts", type: "scanner", shortName: "bpd" },
+      { cat: "POLICE / FIRE SCANNER", name: "Seattle King County", meta: "King Co Sheriff", type: "scanner", shortName: "kcso2" },
+      { cat: "POLICE / FIRE SCANNER", name: "Las Vegas Metro PD", meta: "Clark County NV", type: "scanner", shortName: "lvmpd" },
+      { cat: "POLICE / FIRE SCANNER", name: "DC Metro Police", meta: "Washington DC", type: "scanner", shortName: "dcpd" },
+      { cat: "POLICE / FIRE SCANNER", name: "LA County Sheriff", meta: "Los Angeles County", type: "scanner", shortName: "lasd" },
+      { cat: "POLICE / FIRE SCANNER", name: "Houston Police HPD", meta: "Houston TX", type: "scanner", shortName: "hpd" },
+      { cat: "POLICE / FIRE SCANNER", name: "Phoenix PD", meta: "Phoenix AZ", type: "scanner", shortName: "ppd" },
+      { cat: "POLICE / FIRE SCANNER", name: "San Francisco DEM", meta: "SF / Bay Area", type: "scanner", shortName: "sfpd" },
+
+      // ══ AVIATION ATC — LiveATC direct streams (HTTP; work from local file) ══
+      {
+        cat: "AVIATION ATC", name: "JFK (KJFK) Tower", meta: "New York", type: "atc",
+        stream: "http://s1.liveatc.net/kjfk_twr",
+        fallback: "http://s2.liveatc.net/kjfk_twr",
+        url: "https://www.liveatc.net/search/?icao=kjfk"
+      },
+      {
+        cat: "AVIATION ATC", name: "JFK (KJFK) TRACON Approach", meta: "New York", type: "atc",
+        stream: "http://s1.liveatc.net/kjfk3",
+        fallback: "http://s2.liveatc.net/kjfk3",
+        url: "https://www.liveatc.net/search/?icao=kjfk"
+      },
+      {
+        cat: "AVIATION ATC", name: "LAX (KLAX) South Complex", meta: "Los Angeles", type: "atc",
+        stream: "http://s1.liveatc.net/klax4",
+        fallback: "http://s2.liveatc.net/klax4",
+        url: "https://www.liveatc.net/search/?icao=klax"
+      },
+      {
+        cat: "AVIATION ATC", name: "LAX (KLAX) Dep / West App", meta: "Los Angeles", type: "atc",
+        stream: "http://s1.liveatc.net/klax7",
+        fallback: "http://s2.liveatc.net/klax7",
+        url: "https://www.liveatc.net/search/?icao=klax"
+      },
+      {
+        cat: "AVIATION ATC", name: "O'Hare (KORD) Approach", meta: "Chicago", type: "atc",
+        stream: "http://s1.liveatc.net/kord3",
+        fallback: "http://s2.liveatc.net/kord3",
+        url: "https://www.liveatc.net/search/?icao=kord"
+      },
+      {
+        cat: "AVIATION ATC", name: "Reagan Natl (KDCA) Approach", meta: "Washington DC", type: "atc",
+        stream: "http://s1.liveatc.net/kdca",
+        fallback: "http://s2.liveatc.net/kdca",
+        url: "https://www.liveatc.net/search/?icao=kdca"
+      },
+      {
+        cat: "AVIATION ATC", name: "SFO (KSFO) Tower", meta: "San Francisco", type: "atc",
+        stream: "http://s1.liveatc.net/ksfo_twr",
+        fallback: "http://s2.liveatc.net/ksfo_twr",
+        url: "https://www.liveatc.net/search/?icao=ksfo"
+      },
+      {
+        cat: "AVIATION ATC", name: "Miami (KMIA) Approach", meta: "Miami, FL", type: "atc",
+        stream: "http://s1.liveatc.net/kmia2",
+        fallback: "http://s2.liveatc.net/kmia2",
+        url: "https://www.liveatc.net/search/?icao=kmia"
+      },
+      {
+        cat: "AVIATION ATC", name: "Heathrow (EGLL) Approach", meta: "London, UK", type: "atc",
+        stream: "http://s1.liveatc.net/egll",
+        fallback: "http://s2.liveatc.net/egll",
+        url: "https://www.liveatc.net/search/?icao=egll"
+      },
+
+      // ══ AMBIENT / MUSIC — SomaFM (HTTPS CORS-enabled, works everywhere, no account) ══
+      {
+        cat: "AMBIENT / MUSIC", name: "SomaFM: Groove Salad", meta: "Ambient · Downtempo · HTTPS", type: "wx",
+        stream: "https://ice.somafm.com/groovesalad-128-mp3"
+      },
+      {
+        cat: "AMBIENT / MUSIC", name: "SomaFM: Drone Zone", meta: "Atmospheric Textures · HTTPS", type: "wx",
+        stream: "https://ice.somafm.com/dronezone-128-mp3"
+      },
+      {
+        cat: "AMBIENT / MUSIC", name: "SomaFM: DEF CON Radio", meta: "Music for Hacking · HTTPS", type: "wx",
+        stream: "https://ice.somafm.com/defcon-128-mp3"
+      },
+      {
+        cat: "AMBIENT / MUSIC", name: "SomaFM: Secret Agent", meta: "Spy Jazz Lounge · HTTPS", type: "wx",
+        stream: "https://ice.somafm.com/secretagent-128-mp3"
+      },
+      {
+        cat: "AMBIENT / MUSIC", name: "SomaFM: Space Station Soma", meta: "Deep Space Electronics · HTTPS", type: "wx",
+        stream: "https://ice.somafm.com/spacestation-128-mp3"
+      },
+      {
+        cat: "AMBIENT / MUSIC", name: "SomaFM: Synphaera Radio", meta: "Electronic Ambient Space · HTTPS", type: "wx",
+        stream: "https://ice.somafm.com/synphaera-128-mp3"
+      },
+      {
+        cat: "AMBIENT / MUSIC", name: "SomaFM: Illinois Street Lounge", meta: "Chill Monitor · HTTPS", type: "wx",
+        stream: "https://ice.somafm.com/illstreet-128-mp3"
+      },
+      {
+        cat: "AMBIENT / MUSIC", name: "Third Rock Radio (NASA)", meta: "NASA Music · HTTPS", type: "wx",
+        stream: "https://nasatn.out.airtime.pro/nasatn_a"
+      },
+
+      // ══ MILITARY ATC — Broadcastify Premium (external link only) ══
+      {
+        cat: "MILITARY ATC", name: "Andrews AFB (KADW) ATC", meta: "Joint Base Andrews — DC · Premium Feed", type: "mil",
+        link: "https://www.broadcastify.com/listen/feed/14614"
+      },
+      {
+        cat: "MILITARY ATC", name: "Langley AFB (KLFI) Approach", meta: "Hampton Roads, VA · Premium Feed", type: "mil",
+        link: "https://www.broadcastify.com/listen/feed/22708"
+      },
+      {
+        cat: "MILITARY ATC", name: "Edwards AFB (KEDW) Tower", meta: "Test Flights CA · Premium Feed", type: "mil",
+        link: "https://www.broadcastify.com/listen/feed/37318"
+      },
+    ];
+
+    // ══════════════════════════════════════════════════
+    // MAP INIT
+    // ══════════════════════════════════════════════════
+    // IMPORTANT: Do NOT set crossOrigin:true on tile layers — it triggers CORS
+    // preflight that fails from file:// origins and blocks CartoDB/Stadia tiles.
+    const STADIA_KEY = '04762f72-7659-4f5f-a62c-14ea1adc50df';
+    const TILE_LAYERS = {
+      dark: L.tileLayer(
+        `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png?api_key=${STADIA_KEY}`,
+        { maxZoom: 20, attribution: '' }),
+
+      sat: L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        { maxZoom: 19, attribution: '' }),
+
+      topo: L.tileLayer(
+        `https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}.png?api_key=${STADIA_KEY}`,
+        { maxZoom: 20, attribution: '' }),
+
+      street: L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { maxZoom: 19, subdomains: 'abc', attribution: '' }),
+    };
+
+    const map = L.map('map', { center: [25, 10], zoom: 3, zoomControl: true, attributionControl: false, preferCanvas: true });
+    // Add dark layer immediately, wait for DOM then force size recalc
+    TILE_LAYERS.dark.addTo(map);
+    window.addEventListener('load', () => { setTimeout(() => map.invalidateSize(), 100); });
+    let activeBase = 'dark';
+
+    const camLayerGroup = L.layerGroup().addTo(map);
+    const flightLayerGroup = L.layerGroup();
+    const fireLayerGroup = L.layerGroup();
+    const _cvs = L.canvas({ padding: 0.5 }); // shared canvas renderer — no DOM node per marker
+
+    let allFlights = [], fltFilter = 'all';
+    let layers = { cams: true, fires: false, flights: false };
+    let snapTimer = null, activeItem = null, activeTool = null;
+
+    map.on('mousemove', e => {
+      document.getElementById('coord-disp').textContent = `LAT: ${e.latlng.lat.toFixed(4)}  LNG: ${e.latlng.lng.toFixed(4)}`;
+    });
+
+    // ── Base layer switch ──
+    function setBase(name, btn) {
+      if (name === activeBase) return; // already active
+      map.removeLayer(TILE_LAYERS[activeBase]);
+      TILE_LAYERS[name].addTo(map);
+      activeBase = name;
+      document.querySelectorAll('#map-toolbar .mtbtn').forEach(b => {
+        if (['bl-dark', 'bl-sat', 'bl-topo', 'bl-street'].includes(b.id)) b.classList.remove('on');
+      });
+      btn.classList.add('on');
+    }
+
+    // ── Overlay toggles ──
+    function toggleLayer(name, btn) {
+      layers[name] = !layers[name];
+      btn.classList.toggle('on', layers[name]);
+      if (name === 'cams') { if (layers.cams) camLayerGroup.addTo(map); else map.removeLayer(camLayerGroup); }
+      if (name === 'flights') { if (layers.flights) { flightLayerGroup.addTo(map); if (!allFlights.length) doFetchFlights(); } else map.removeLayer(flightLayerGroup); }
+    }
+
+    // ══════════════════════════════════════════════════
+    // CAMERA MAP MARKERS
+    // ══════════════════════════════════════════════════
+    function buildCamMarkers() {
+      camLayerGroup.clearLayers();
+      Object.entries(CITIES).forEach(([city, data]) => {
+        data.cameras.forEach(cam => {
+          if (!cam.lat || !cam.lng) return; // skip cams with missing coords
+          const cls = cam.type === 'traffic' ? 'cam-pin t' : cam.type === 'data' || cam.type === 'snap' ? 'cam-pin d' : cam.type === 'mjpeg' ? 'cam-pin' : '';
+          const url = cam.url || (cam.sources && cam.sources[0]) || cam.mjpeg || '#';
+          const icon = L.divIcon({ className: '', html: `<div class="${cls}"></div>`, iconSize: [9, 9], iconAnchor: [4, 4] });
+          const popup = `<div class="mpop"><div class="mpop-title">${cam.name.toUpperCase()}</div><div class="mpop-row">CITY: <span>${city}</span></div><div class="mpop-row">TYPE: <span>${cam.type.toUpperCase()}</span></div><div class="mpop-row">SOURCE: <span>${cam.src}</span></div><button class="mpop-open" onclick="openCamFromMap('${city}','${encodeURIComponent(cam.name)}')">⟶ OPEN FEED</button></div>`;
+          L.marker([cam.lat, cam.lng], { icon }).bindPopup(popup, { className: '', minWidth: 190 }).addTo(camLayerGroup);
+        });
+      });
+      const total = Object.values(CITIES).reduce((a, c) => a + (c.cameras?.length || 0), 0);
+      document.getElementById('tb-feeds').textContent = total;
+      document.getElementById('tb-cams').textContent = total;
+    }
+
+    window.openCamFromMap = function (city, name) {
+      map.closePopup();
+      const cam = CITIES[city]?.cameras.find(c => c.name === decodeURIComponent(name));
+      if (cam) loadFeed(cam, city);
+    };
+
+    // ══════════════════════════════════════════════════
+    // FEED PANEL
+    // ══════════════════════════════════════════════════
+    function loadFeed(cam, city) {
+      document.getElementById('right').classList.add('open');
+      document.getElementById('fp-name').textContent = cam.name;
+      document.getElementById('fp-type').textContent = cam.type.toUpperCase();
+      document.getElementById('fp-src').textContent = cam.src;
+      document.getElementById('fp-city').textContent = city;
+      document.getElementById('fp-ext').href = cam.url || (cam.sources && cam.sources[0]) || cam.mjpeg || cam.embed || '#';
+
+      const iframe = document.getElementById('fp-iframe');
+      const img = document.getElementById('fp-img');
+      const offline = document.getElementById('fp-offline');
+      const liveBadge = document.getElementById('fp-live-badge');
+      const snapBadge = document.getElementById('fp-snap-badge');
+
+      if (snapTimer) { clearInterval(snapTimer); snapTimer = null; }
+      iframe.src = 'about:blank'; iframe.style.display = 'none';
+      img.style.display = 'none'; img.src = '';
+      offline.style.display = 'none';
+      const fpLoading = document.getElementById('fp-loading'); if (fpLoading) fpLoading.style.display = 'none';
+      liveBadge.style.display = 'none'; snapBadge.style.display = 'none';
+
+      if (cam.type === 'live' && cam.embed) {
+        // YouTube / embed — iframe works fine
+        iframe.style.display = 'block';
+        iframe.src = cam.embed;
+        liveBadge.style.display = 'flex';
+
+      } else if (cam.type === 'mjpeg' && (cam.sources || cam.mjpeg)) {
+        const srcs = cam.sources || [cam.mjpeg];
+        let idx = 0, goodIdx = -1;
+
+        function tryNext() {
+          if (idx >= srcs.length) {
+            img.style.display = 'none';
+            offline.style.display = 'flex';
+            const url = srcs[0] || '#';
+            offline.querySelector('p').innerHTML =
+              'All ' + srcs.length + ' source(s) offline or blocked.<br>' +
+              '<small style="color:var(--dim)">HTTP streams require file:// or allowing mixed content.</small><br>' +
+              '<a href="' + url + '" target="_blank" style="color:var(--g);font-size:9px;word-break:break-all">' + url + '</a>';
+            if (offline.querySelector('a')) offline.querySelector('a').href = url;
+            return;
+          }
+          img.src = srcs[idx];
+          offline.style.display = 'none';
+          img.style.display = 'block';
+        }
+
+        const loadingDiv = document.getElementById('fp-loading');
+        img.onload = () => { goodIdx = idx; offline.style.display = 'none'; if (loadingDiv) loadingDiv.style.display = 'none'; img.style.display = 'block'; };
+        if (loadingDiv) loadingDiv.style.display = 'flex';
+        img.onerror = () => { idx++; setTimeout(tryNext, 80); };
+        tryNext();
+        liveBadge.style.display = 'flex';
+        snapTimer = setInterval(() => {
+          const si = goodIdx >= 0 ? goodIdx : Math.max(0, idx - 1);
+          if (img.style.display !== 'none' && srcs[si]) img.src = srcs[si] + '?_=' + Date.now();
+        }, 30000);
+
+      } else if (cam.snap) {
+        // Static snapshot — refresh every 6s
+        img.style.display = 'block';
+        img.src = cam.snap + '?_=' + Date.now();
+        img.onerror = () => { img.style.display = 'none'; offline.style.display = 'flex'; };
+        snapBadge.style.display = 'flex';
+        snapTimer = setInterval(() => { img.src = cam.snap + '?_=' + Date.now(); }, 6000);
+
+      } else {
+        offline.style.display = 'flex';
+      }
+    }
+
+    function closeFeed() {
+      document.getElementById('right').classList.remove('open');
+      document.getElementById('fp-iframe').src = 'about:blank';
+      if (snapTimer) { clearInterval(snapTimer); snapTimer = null; }
+      if (activeItem) { activeItem.classList.remove('active'); activeItem = null; }
+    }
+
+    // ══════════════════════════════════════════════════
+
+
+
+    // ══════════════════════════════════════════════════
+    // SIDEBAR CAMERAS
+    // ══════════════════════════════════════════════════
+    function buildSidebarCams() {
+      const container = document.getElementById('pane-cameras');
+      container.innerHTML = '';
+
+      Object.entries(CITIES).forEach(([city, data]) => {
+        const grp = document.createElement('div'); grp.className = 'city-grp';
+        const hdr = document.createElement('div'); hdr.className = 'city-header';
+        hdr.innerHTML = `<span class="city-arr">&#9658;</span><span class="city-nm">${city}</span><span class="cam-cnt">${data.cameras.length}</span>`;
+        const list = document.createElement('div'); list.className = 'cam-list';
+        const cntEl = hdr.querySelector('.cam-cnt');
+
+        data.cameras.forEach(cam => {
+          const item = document.createElement('div'); item.className = 'cam-item';
+          const dotCls = cam.type === 'traffic' ? 'cdot traffic' : cam.type === 'snap' || cam.type === 'data' ? 'cdot snap' : cam.type === 'mjpeg' ? 'cdot mjpeg' : 'cdot live';
+          item.innerHTML = `<div class="${dotCls}"></div><div class="cam-lbl">${cam.name}<br><span class="cam-src-tag">${cam.src}</span></div>`;
+          item.onclick = () => {
+            if (activeItem) activeItem.classList.remove('active');
+            item.classList.add('active'); activeItem = item;
+            if (data.lat !== 0) map.setView([cam.lat, cam.lng], 13, { animate: true });
+            loadFeed(cam, city);
+          };
+          list.appendChild(item);
+        });
+
+        hdr.onclick = () => {
+          hdr.classList.toggle('open'); list.classList.toggle('open');
+          if (hdr.classList.contains('open') && data.lat !== 0) {
+            map.setView([data.lat, data.lng], 11, { animate: true });
+          }
+        };
+        grp.appendChild(hdr); grp.appendChild(list);
+        container.appendChild(grp);
+      });
+    }
+
+    // ── Sidebar tabs ──
+
+    let sidebarOpen = true;
+    function toggleSidebar() {
+      sidebarOpen = !sidebarOpen;
+      document.getElementById('left').classList.toggle('hidden', !sidebarOpen);
+      const t = document.getElementById('sidetog');
+      t.textContent = sidebarOpen ? '◀' : '▶';
+      t.classList.toggle('closed', !sidebarOpen);
+    }
+    function showSideTab(name, btn) {
+      document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('pane-cameras').classList.toggle('hidden-pane', name !== 'cameras');
+      document.getElementById('pane-tools-side').classList.toggle('hidden-pane', name !== 'tools-side');
+    }
+
+    // ── Side tools ──
+    function buildSideTools() {
+      const c = document.getElementById('side-tools-list');
+      c.innerHTML = '';
+      Object.entries(TOOLS_DATA).forEach(([cat, items]) => {
+        const s = document.createElement('div');
+        s.innerHTML = `<div class="tool-sec-lbl">${cat}</div>`;
+        items.forEach(t => {
+          const b = document.createElement('button');
+          b.className = 'tool-btn'; b.textContent = t.n;
+          b.onclick = () => { switchSection('tools', null); if (t.native) launchNativeTool(t.native, t.n, t.desc || ''); else if (t.u) loadToolFrame(t.u, t.n); };
+          s.appendChild(b);
+        });
+        c.appendChild(s);
+      });
+    }
+    function filterSideTools(v) {
+      const btns = document.querySelectorAll('#side-tools-list .tool-btn');
+      btns.forEach(b => b.style.display = (!v || b.textContent.toLowerCase().includes(v.toLowerCase())) ? '' : 'none');
+    }
+
+    // ══════════════════════════════════════════════════
+    // FLIGHTS — Source priority:
+    //   1. Unofficial FR24 feed.js  (free, no key, ~5000 flights worldwide)
+    //   2. Official FR24 REST API   (requires key stored via the FR24 KEY button)
+    //   3. adsb.lol                 (free, area-based fallback)
+    //   4. OpenSky                  (free, global fallback)
+    // Unofficial API reverse-engineered from:
+    //   https://github.com/JeanExtreme002/FlightRadarAPI
+    // Official FR24 API: https://fr24api.flightradar24.com
+    // ══════════════════════════════════════════════════
+
+    // FR24 official API key — persisted in localStorage (kept for future use)
+    let FR24_KEY = localStorage.getItem('fr24_api_key') || '';
+
+    window.addEventListener('load', () => {
+      document.getElementById('fr24-key-btn').classList.toggle('fr24-set', !!FR24_KEY);
+    });
+
+    function openFR24Modal() {
+      document.getElementById('fr24-key-input').value = FR24_KEY;
+      document.getElementById('fr24-status').className = 'fr24-status';
+      document.getElementById('fr24-status').textContent = '';
+      document.getElementById('fr24-modal').classList.add('open');
+    }
+    function closeFR24Modal() {
+      document.getElementById('fr24-modal').classList.remove('open');
+    }
+    function saveFR24Key() {
+      const key = document.getElementById('fr24-key-input').value.trim();
+      if (!key) { showFR24Status('err', 'Please paste a valid API token.'); return; }
+      FR24_KEY = key;
+      localStorage.setItem('fr24_api_key', key);
+      document.getElementById('fr24-key-btn').classList.add('fr24-set');
+      showFR24Status('ok', 'Key saved. Fetching live flights…');
+      setTimeout(() => { closeFR24Modal(); if (layers.flights) doFetchFlights(); }, 1200);
+    }
+    function clearFR24Key() {
+      FR24_KEY = '';
+      localStorage.removeItem('fr24_api_key');
+      document.getElementById('fr24-key-input').value = '';
+      document.getElementById('fr24-key-btn').classList.remove('fr24-set');
+      showFR24Status('ok', 'Key cleared. Unofficial API will be used.');
+    }
+    function showFR24Status(type, msg) {
+      const el = document.getElementById('fr24-status');
+      el.className = 'fr24-status ' + type;
+      el.textContent = msg;
+    }
+    document.getElementById('fr24-modal').addEventListener('click', function (e) {
+      if (e.target === this) closeFR24Modal();
+    });
+
+    const MIL_PREFIXES = ['RCH', 'REACH', 'JAKE', 'DOOM', 'FURY', 'SPAR', 'VIPER', 'GHOST', 'BRONCO',
+      'ATLAS', 'USAF', 'NAVY', 'USMC', 'ARMY', 'GUARD', 'DUKE', 'TUSK', 'VALOR', 'STEEL', 'IRON',
+      'SWORD', 'BLADE', 'LANCE', 'ANVIL', 'BOXER', 'WOLF', 'BEAR', 'EAGLE', 'FALCON', 'HAWK',
+      'COBRA', 'LANCER', 'RANGER', 'SWIFT', 'ASCOT', 'RAKE', 'VENUS', 'TOPGUN', 'CONVOY', 'HAVOC'];
+    const AIRLINE_RE = /^(AAL|UAL|DAL|SWA|BAW|DLH|AFR|KLM|UAE|QFA|JAL|ANA|SIA|CPA|THY|EZY|RYR|WZZ|ASA|JBU|FDX|UPS|GTI|CCA|CSN|CHH|CES|VRD|FFT|PAC|NKS|SPR|AAY|ASH|ENY|RPA|SKW|PDT|AWI|CPZ|SXS|GLO|TAM|GWI|EIN|BEL|SVA|LNI|BMA|TOM|TUI|AZU|AZA|EXS|TVF|VLG|IBE)/;
+
+    function classifyFlight(cs = '', airline_icao = '') {
+      const c = (cs || '').trim().toUpperCase();
+      const a = (airline_icao || '').trim().toUpperCase();
+      if (!c && !a) return 'private';
+      if (['RCH', 'RCF', 'SVF', 'USAF', 'USN', 'USMC', 'ARMY', 'ANG', 'JSTARS', 'AWACS'].includes(a)) return 'military';
+      if (MIL_PREFIXES.some(p => c.startsWith(p))) return 'military';
+      if (AIRLINE_RE.test(a.slice(0, 3)) || AIRLINE_RE.test(c.slice(0, 3))) return 'commercial';
+      if (/^[A-Z]{2,3}\d{1,4}[A-Z]?$/.test(c)) return 'commercial';
+      return 'private';
+    }
+
+    // ── CORS proxy helper (works from file:// null-origin context) ──
+    // Proxies that accept null origin, tried in order until one succeeds.
+    const FLIGHT_PROXIES = [
+      u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    ];
+    async function proxyFetch(url, timeoutMs = 14000) {
+      for (const makeProxy of FLIGHT_PROXIES) {
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), timeoutMs);
+          const r = await fetch(makeProxy(url), { signal: ctrl.signal });
+          clearTimeout(t);
+          if (r.ok) return r;
+        } catch (e) { /* try next proxy */ }
+      }
+      throw new Error('All CORS proxies failed for: ' + url);
+    }
+
+    // ── SOURCE 1: Unofficial FR24 feed.js (no key needed) ──
+    // Uses data-cloud.flightradar24.com via CORS proxy chain (corsproxy.io → codetabs → allorigins).
+    // Response: { "fr24_id": [icao,lat,lng,hdg,alt,spd,squawk,,type,reg,time,orig,dest,flight,gnd,vspd,callsign,,airline_icao], … }
+    // Array indices match JeanExtreme002/FlightRadarAPI Flight entity.
+    async function fetchFromFR24Unofficial() {
+      const b = map.getBounds();
+      // bounds format expected by feed.js: "north,south,west,east"
+      const bounds = [
+        b.getNorth().toFixed(2),
+        b.getSouth().toFixed(2),
+        b.getWest().toFixed(2),
+        b.getEast().toFixed(2)
+      ].join(',');
+
+      const feedUrl = `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=1&estimated=1&maxage=14400&gliders=1&stats=1&limit=5000&bounds=${bounds}`;
+
+      // Proxy through null-origin-safe chain (corsproxy.io → codetabs → allorigins)
+      const r = await proxyFetch(feedUrl, 14000);
+      if (!r.ok) throw new Error(`FR24 unofficial HTTP ${r.status}`);
+      const raw = await r.json();
+
+      const flights = [];
+      for (const [id, info] of Object.entries(raw)) {
+        // Skip metadata keys (non-array values)
+        if (!Array.isArray(info)) continue;
+        if (info.length < 14) continue;
+        const lat = info[1], lng = info[2];
+        if (!lat || !lng) continue;
+
+        flights.push({
+          lat,
+          lon: lng,
+          alt_baro: info[4] || 0,
+          track: info[3] || 0,
+          gs: info[5] || null,
+          flight: (info[13] || info[16] || '').trim(),
+          hex: info[0] || id,
+          r: info[9] || '',
+          t: info[8] || '',
+          dep: info[11] || '?',
+          arr: info[12] || '?',
+          squawk: info[6] || '',
+          airline_icao: info[18] || '',
+          onGround: info[14] || 0,
+          source: 'FR24 (unofficial)',
+        });
+      }
+
+      if (flights.length === 0) throw new Error('FR24 unofficial: no flights in response');
+      return flights;
+    }
+
+    // ── SOURCE 2: Official FR24 REST API (requires key) ──
+    async function fetchFromFR24Official() {
+      const b = map.getBounds();
+      const bounds = [b.getNorth().toFixed(4), b.getSouth().toFixed(4), b.getWest().toFixed(4), b.getEast().toFixed(4)].join(',');
+      const url = `https://fr24api.flightradar24.com/api/live/flight-positions/full?bounds=${bounds}&categories=P,C,M&limit=1500`;
+      const r = await Promise.race([fetch(url, { headers: { 'Accept': 'application/json', 'Accept-Version': 'v1', 'Authorization': `Bearer ${FR24_KEY}` } }), new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 12000))]);
+      if (r.status === 401 || r.status === 403) {
+        FR24_KEY = ''; localStorage.removeItem('fr24_api_key');
+        document.getElementById('fr24-key-btn').classList.remove('fr24-set');
+        throw new Error('FR24 official auth failed — key cleared');
+      }
+      if (!r.ok) throw new Error(`FR24 official HTTP ${r.status}`);
+      const d = await r.json();
+      const flights = d.data || d;
+      if (!Array.isArray(flights) || flights.length === 0) throw new Error('FR24 official empty');
+      return flights.filter(f => f.lat != null && f.lon != null).map(f => ({
+        lat: f.lat, lon: f.lon, alt_baro: f.alt ?? f.altitude ?? 0, track: f.track ?? f.heading ?? 0,
+        gs: f.gspeed ?? f.ground_speed ?? null, flight: f.callsign || f.flight || '', hex: f.hex ?? f.icao_address ?? f.fr24_id ?? '',
+        r: f.reg ?? f.registration ?? '', t: f.type ?? f.aircraft_type ?? '', airline: f.airline_name || '',
+        airline_icao: f.airline_icao || '', dep: f.orig_iata ?? f.origin ?? '?', arr: f.dest_iata ?? f.destination ?? '?',
+        squawk: f.squawk || '', mil: false, source: 'FR24 (official)',
+      }));
+    }
+
+    async function doFetchFlights() {
+      document.getElementById('tb-flt').textContent = '...';
+
+      // ── SOURCE 1: adsb.lol (free, real-time ADS-B) via proxy (null-origin safe) ──
+      try {
+        const center = map.getCenter();
+        const dist = Math.min(250, Math.round(8000 / Math.pow(2, map.getZoom() - 2)));
+        const url = `https://api.adsb.lol/v2/lat/${center.lat.toFixed(2)}/lon/${center.lng.toFixed(2)}/dist/${dist}`;
+        const r = await proxyFetch(url, 10000);
+        if (r.ok) {
+          const d = await r.json();
+          if (d.ac && d.ac.length > 0) {
+            allFlights = d.ac.filter(a => a.lat && a.lon).map(a => ({ ...a, source: 'adsb.lol' }));
+            renderFlightsADSB();
+            return;
+          }
+        }
+      } catch (e) { /* fall through */ }
+
+      // ── SOURCE 2: Official FR24 REST API (if key is set) ──
+      if (FR24_KEY) {
+        try {
+          allFlights = await fetchFromFR24Official();
+          renderFlightsADSB();
+          return;
+        } catch (e) {
+          console.warn('FR24 official failed:', e.message, '— falling back');
+        }
+      }
+
+      // ── SOURCE 3: Unofficial FR24 (always try first — free, no key) ──
+      try {
+        allFlights = await fetchFromFR24Unofficial();
+        renderFlightsADSB();
+        return;
+      } catch (e) {
+        console.warn('FR24 unofficial failed:', e.message, '— trying next source');
+      }
+
+      // ── SOURCE 4: OpenSky via proxy chain ──
+      try {
+        const r = await proxyFetch('https://opensky-network.org/api/states/all', 12000);
+        if (r.ok) {
+          const d = await r.json();
+          if (d.states) {
+            allFlights = d.states.filter(s => s[5] && s[6] && !s[8]).map(s => ({
+              hex: s[0], flight: (s[1] || '').trim(), lat: s[6], lon: s[5],
+              gs: s[9] ? Math.round(s[9] * 1.944) : null, track: s[10], alt_baro: s[7],
+              mil: false, source: 'OpenSky',
+            }));
+            renderFlightsADSB();
+            return;
+          }
+        }
+      } catch (e) { /* all sources failed */ }
+
+      document.getElementById('tb-flt').textContent = '–';
+      console.warn('All flight sources failed');
+    }
+
+    function renderFlightsADSB() {
+      flightLayerGroup.clearLayers();
+      const counts = { commercial: 0, military: 0, private: 0 };
+      const bounds = map.getBounds().pad(0.1);
+      const zoom = map.getZoom();
+      const useIcons = zoom >= 7;
+      const FLT_COL = { commercial: '#22c55e', military: '#ef4444', private: '#f59e0b' };
+      const visible = [];
+      for (let i = 0; i < allFlights.length; i++) {
+        const a = allFlights[i];
+        const lat = a.lat, lng = a.lon || a.long;
+        if (!lat || !lng) continue;
+        if (!bounds.contains([lat, lng])) continue;
+        const type = classifyFlight(a.flight || a.hex || '', a.airline_icao || '');
+        if (fltFilter !== 'all' && fltFilter !== type) continue;
+        counts[type]++;
+        visible.push({ a, lat, lng, type });
+      }
+      const CAP = useIcons ? 600 : 4000;
+      const pool = visible.length > CAP
+        ? visible.sort((x, y) => (x.type === 'military' ? 0 : 1) - (y.type === 'military' ? 0 : 1)).slice(0, CAP)
+        : visible;
+      let idx = 0;
+      const CHUNK = 150;
+      function addChunk() {
+        const end = Math.min(idx + CHUNK, pool.length);
+        const batch = [];
+        for (; idx < end; idx++) {
+          const { a, lat, lng, type } = pool[idx];
+          const col = FLT_COL[type];
+          const hdg = a.track || a.trk || 0;
+          const cs = (a.flight || a.hex || '?').trim().toUpperCase();
+          const popup = '<div class="mpop"><div class="mpop-title">' + cs + '</div>' +
+            '<div class="mpop-row">TYPE: <span style="color:' + col + '">' + type.toUpperCase() + '</span></div>' +
+            (a.airline ? '<div class="mpop-row">AIRLINE: <span>' + a.airline + '</span></div>' : '') +
+            (a.dep && a.arr ? '<div class="mpop-row">ROUTE: <span>' + a.dep + ' → ' + a.arr + '</span></div>' : '') +
+            '<div class="mpop-row">ALT: <span>' + (a.alt_baro ? Math.round(a.alt_baro).toLocaleString() + ' ft' : '–') + '</span></div>' +
+            '<div class="mpop-row">SPD: <span>' + (a.gs ? Math.round(a.gs) + 'kts' : '–') + '</span></div>' +
+            '<div class="mpop-row">HDG: <span>' + Math.round(hdg) + '°</span></div>' +
+            (a.t ? '<div class="mpop-row">ACFT: <span>' + a.t + '</span></div>' : '') +
+            (a.r ? '<div class="mpop-row">REG: <span>' + a.r + '</span></div>' : '') +
+            '<div class="mpop-row">ICAO: <span>' + (a.hex || '–') + '</span></div>' +
+            '<div class="mpop-row">SRC: <span style="color:var(--dim)">' + (a.source || '–') + '</span></div></div>';
+          let m;
+          if (useIcons) {
+            const cls = type === 'military' ? 'flt mil' : type === 'commercial' ? 'flt com' : 'flt pvt';
+            m = L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: '',
+                html: '<div class="' + cls + '" style="transform:rotate(' + hdg + 'deg)">✈</div>',
+                iconSize: [14, 14], iconAnchor: [7, 7]
+              })
+            }).bindPopup(popup, { className: '' });
+          } else {
+            m = L.circleMarker([lat, lng], {
+              renderer: _cvs, radius: type === 'military' ? 5 : 3,
+              color: col, fillColor: col, fillOpacity: 0.8, weight: 1
+            }).bindPopup(popup, { className: '' });
+          }
+          batch.push(m);
+        }
+        flightLayerGroup.addLayer(L.featureGroup(batch));
+        if (idx < pool.length) { requestAnimationFrame(addChunk); }
+        else {
+          const tot = counts.commercial + counts.military + counts.private;
+          document.getElementById('tb-flt').textContent = tot.toLocaleString() + (visible.length > CAP ? ' *' : '');
+          document.getElementById('cnt-com').textContent = counts.commercial;
+          document.getElementById('cnt-mil').textContent = counts.military;
+          document.getElementById('cnt-pvt').textContent = counts.private;
+        }
+      }
+      requestAnimationFrame(addChunk);
+    }
+
+    function setFltFilter(f, btn) {
+      fltFilter = f;
+      ['ft-all', 'ft-com', 'ft-mil', 'ft-pvt'].forEach(id => document.getElementById(id).classList.remove('on', 'a-on', 'r-on'));
+      if (f === 'all') btn.classList.add('on');
+      else if (f === 'military') btn.classList.add('r-on');
+      else if (f === 'private') btn.classList.add('a-on');
+      else btn.classList.add('on');
+      if (allFlights.length) renderFlightsADSB();
+      else if (layers.flights) doFetchFlights();
+    }
+
+    let _fltDebounce = null, _lastFltZoom = map.getZoom();
+    map.on('moveend', () => {
+      if (!layers.flights) return;
+      clearTimeout(_fltDebounce);
+      _fltDebounce = setTimeout(() => {
+        const z = map.getZoom();
+        if (allFlights.length && z === _lastFltZoom) { renderFlightsADSB(); }
+        else { _lastFltZoom = z; doFetchFlights(); }
+      }, 500);
+    });
+    setInterval(() => { if (layers.flights) doFetchFlights(); }, 90000);
+
+    // ══════════════════════════════════════════════════
+    // FIRES — NASA FIRMS API (real satellite hotspot data, 10-min updates)
+    // ══════════════════════════════════════════════════
+    const FIRMS_KEY = 'bc605564857bde4161a4f284f3d621be';
+
+    const CONTINENT_BBOX = {
+      'fc-na': [-168, -10, -10, 84],
+      'fc-sa': [-82, -57, -34, 15],
+      'fc-eu': [-26, 34, 50, 72],
+      'fc-af': [-18, -35, 52, 38],
+      'fc-as': [25, -10, 180, 82],
+      'fc-oc': [110, -50, 180, 0],
+      'fc-gl': [-180, -90, 180, 90],
+    };
+    const CONTINENT_NAMES = {
+      'fc-na': 'N.America', 'fc-sa': 'S.America', 'fc-eu': 'Europe',
+      'fc-af': 'Africa', 'fc-as': 'Asia', 'fc-oc': 'Oceania', 'fc-gl': 'Global'
+    };
+    let _fireActive = false;
+
+    function toggleFirePanel(e) {
+      e.stopPropagation();
+      const p = document.getElementById('fire-panel');
+      if (p.classList.contains('open')) { p.classList.remove('open'); return; }
+      const r = document.getElementById('ov-fires').getBoundingClientRect();
+      p.style.left = r.left + 'px';
+      p.style.top = (r.bottom + 6) + 'px';
+      p.style.transform = 'none';
+      p.classList.add('open');
+      setTimeout(() => {
+        document.addEventListener('click', function _fp(ev) {
+          if (!p.contains(ev.target)) { p.classList.remove('open'); document.removeEventListener('click', _fp); }
+        });
+      }, 10);
+    }
+
+    function updateFires() {
+      const sel = Object.keys(CONTINENT_BBOX).filter(id => document.getElementById(id)?.checked);
+      if (!sel.length) {
+        fireLayerGroup.clearLayers();
+        if (_fireActive) { map.removeLayer(fireLayerGroup); _fireActive = false; }
+        layers.fires = false;
+        document.getElementById('ov-fires').classList.remove('on');
+        document.getElementById('tb-fire').textContent = '–';
+        document.getElementById('fire-status').textContent = 'Select continents to load fires';
+        return;
+      }
+      if (!_fireActive) { fireLayerGroup.addTo(map); _fireActive = true; layers.fires = true; }
+      document.getElementById('ov-fires').classList.add('on');
+      fetchFires(sel);
+    }
+
+    async function fetchFires(continentIds) {
+      if (!continentIds) continentIds = Object.keys(CONTINENT_BBOX).filter(id => document.getElementById(id)?.checked);
+      if (!continentIds.length) return;
+      const names = continentIds.map(id => CONTINENT_NAMES[id]).join(', ');
+      document.getElementById('tb-fire').textContent = '…';
+      document.getElementById('fire-status').textContent = 'Fetching ' + names + '…';
+      const allF = [];
+
+      // NASA FIRMS /area/csv/ — 375m satellite hotspot detections, one row per pixel.
+      // FIRMS does not send CORS headers, so all requests go through proxies.
+      // Try VIIRS_SNPP_NRT first (higher resolution), fall back to MODIS_NRT.
+      // Proxies tried in order: codetabs → allorigins/raw → allorigins/get → corsproxy.io.
+      const PROXIES = [
+        url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+        url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+        url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+      ];
+      const SENSORS = ['VIIRS_SNPP_NRT', 'MODIS_NRT'];
+
+      await Promise.allSettled(continentIds.map(async (cid) => {
+        const [w, s, e, n] = CONTINENT_BBOX[cid];
+        const bbox = `${w},${s},${e},${n}`;
+
+        for (const sensor of SENSORS) {
+          const apiUrl = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${FIRMS_KEY}/${sensor}/${bbox}/1`;
+          let gotValidResponse = false;
+
+          for (const makeProxy of PROXIES) {
+            try {
+              const ctrl = new AbortController();
+              const timer = setTimeout(() => ctrl.abort(), 20000);
+              const r = await fetch(makeProxy(apiUrl), { signal: ctrl.signal });
+              clearTimeout(timer);
+              if (!r.ok) continue;
+              const text = await r.text();
+              // Reject HTML error pages from proxy or FIRMS
+              if (!text || text.trim().startsWith('<')) continue;
+              const lines = text.trim().split('\n');
+              if (lines.length < 2) { gotValidResponse = true; break; } // valid CSV, just 0 rows
+              const H = lines[0].split(',').map(h => h.trim().toLowerCase());
+              const iLat = H.indexOf('latitude'), iLon = H.indexOf('longitude');
+              if (iLat < 0 || iLon < 0) continue; // not a FIRMS CSV
+              const iDate = H.indexOf('acq_date'), iConf = H.indexOf('confidence');
+              const iFrp = H.indexOf('frp'), iDn = H.indexOf('daynight');
+              const isV = sensor.includes('VIIRS');
+              for (let i = 1; i < lines.length; i++) {
+                const c = lines[i].split(',');
+                const lat = parseFloat(c[iLat]), lng = parseFloat(c[iLon]);
+                if (isNaN(lat) || isNaN(lng)) continue;
+                const cf = (c[iConf] || '').trim();
+                if (isV && cf === 'low') continue;        // skip low-confidence VIIRS
+                if (!isV && parseInt(cf) < 30) continue;  // skip low-confidence MODIS
+                allF.push({
+                  lat, lng,
+                  date: c[iDate] || '–', conf: cf,
+                  frp: parseFloat(c[iFrp]) || 0,
+                  dn: c[iDn] === 'D' ? 'DAYTIME' : 'NIGHTTIME',
+                  src: isV ? 'VIIRS' : 'MODIS'
+                });
+              }
+              gotValidResponse = true;
+              break; // proxy worked — skip remaining proxies
+            } catch (e) { continue; } // proxy failed or timed out — try next
+          }
+          if (gotValidResponse) break; // sensor succeeded — skip MODIS fallback
+        }
+      }));
+
+      // Deduplicate by 0.02° grid cell, sort by fire radiative power descending
+      const seen = new Set();
+      const pool = allF.filter(f => {
+        const k = f.lat.toFixed(2) + ',' + f.lng.toFixed(2);
+        if (seen.has(k)) return false; seen.add(k); return true;
+      }).sort((a, b) => b.frp - a.frp).slice(0, 10000);
+
+      fireLayerGroup.clearLayers();
+      if (pool.length === 0) {
+        document.getElementById('tb-fire').textContent = '–';
+        document.getElementById('fire-status').textContent = 'No hotspots returned — proxy may be busy, try again';
+        return;
+      }
+
+      let fIdx = 0; const FCHUNK = 500;
+      function addFire() {
+        const end = Math.min(fIdx + FCHUNK, pool.length);
+        const batch = [];
+        for (; fIdx < end; fIdx++) {
+          const f = pool[fIdx];
+          const radius = f.frp > 500 ? 7 : f.frp > 100 ? 5 : 3;
+          const col = f.frp > 500 ? '#ff6600' : f.frp > 100 ? '#ff4400' : '#cc2200';
+          batch.push(L.circleMarker([f.lat, f.lng], {
+            renderer: _cvs, radius,
+            color: col, fillColor: col, fillOpacity: 0.75, weight: 0
+          }).bindPopup('<div class="mpop"><div class="mpop-title">🔥 ACTIVE FIRE</div>' +
+            '<div class="mpop-row">DATE: <span>' + f.date + '</span></div>' +
+            '<div class="mpop-row">CONFIDENCE: <span>' + f.conf + '</span></div>' +
+            '<div class="mpop-row">POWER: <span>' + f.frp + ' MW</span></div>' +
+            '<div class="mpop-row">TIME: <span>' + f.dn + '</span></div>' +
+            '<div class="mpop-row">SOURCE: <span>NASA FIRMS ' + f.src + '</span></div></div>',
+            { className: '' }));
+        }
+        fireLayerGroup.addLayer(L.featureGroup(batch));
+        if (fIdx < pool.length) { requestAnimationFrame(addFire); }
+        else {
+          document.getElementById('tb-fire').textContent = pool.length.toLocaleString();
+          document.getElementById('fire-status').textContent = pool.length.toLocaleString() + ' hotspots · ' + names;
+        }
+      }
+      requestAnimationFrame(addFire);
+    }
+
+
+    // ══════════════════════════════════════════════════
+    // MAIN SECTION SWITCHER
+    // ══════════════════════════════════════════════════
+    function switchSection(name, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.mnav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('sec-' + name).classList.add('active');
+      if (btn) btn.classList.add('active');
+      else document.querySelectorAll('.mnav-btn').forEach(b => { if (b.getAttribute('onclick')?.includes("'" + name + "'")) b.classList.add('active'); });
+      if (name === 'map') setTimeout(() => map.invalidateSize(), 50);
+    }
+
+    // ══════════════════════════════════════════════════
+    // METADATA — YouTube
+    // ══════════════════════════════════════════════════
+    async function extractYT() {
+      const raw = document.getElementById('yt-url').value.trim();
+      if (!raw) { showMetaErr('yt', 'Enter a YouTube or Vimeo URL'); return; }
+      setMetaLoading('yt', true);
+      document.getElementById('yt-results').style.display = 'none';
+
+      try {
+        const url = encodeURIComponent(raw);
+        const r = await fetch(`https://noembed.com/embed?url=${url}`);
+        const d = await r.json();
+        if (d.error) { showMetaErr('yt', d.error); return; }
+
+        const thumb = document.getElementById('yt-thumb');
+        if (d.thumbnail_url) { thumb.src = d.thumbnail_url; thumb.style.display = 'block'; } else thumb.style.display = 'none';
+
+        const rows = [
+          ['Title', d.title || '–'],
+          ['Author / Channel', d.author_name || '–'],
+          ['Channel URL', d.author_url ? `<a href="${d.author_url}" target="_blank" style="color:var(--blue)">${d.author_url}</a>` : '–'],
+          ['Provider', d.provider_name || '–'],
+          ['Thumbnail URL', d.thumbnail_url ? `<a href="${d.thumbnail_url}" target="_blank" style="color:var(--blue);word-break:break-all">${d.thumbnail_url}</a>` : '–'],
+          ['Dimensions', d.width && d.height ? `${d.width} × ${d.height} px` : '–'],
+          ['Embed Width', d.width ? d.width + 'px' : '–'],
+          ['Raw URL', `<span style="word-break:break-all;font-size:10px">${raw}</span>`],
+        ];
+        // Try to extract video ID
+        const vidMatch = raw.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        if (vidMatch) rows.push(['Video ID', vidMatch[1]], ['Watch URL', `<a href="https://www.youtube.com/watch?v=${vidMatch[1]}" target="_blank" style="color:var(--blue)">youtube.com/watch?v=${vidMatch[1]}</a>`]);
+
+        const grid = document.getElementById('yt-grid');
+        grid.innerHTML = rows.map(([k, v]) => `<div class="meta-key">${k}</div><div class="meta-val">${v}</div>`).join('');
+        document.getElementById('yt-results').style.display = 'block';
+        clearMetaErr('yt');
+      } catch (e) {
+        showMetaErr('yt', 'Fetch failed: ' + e.message);
+      } finally { setMetaLoading('yt', false); }
+    }
+
+    // ══════════════════════════════════════════════════
+    // METADATA — Image EXIF
+    // ══════════════════════════════════════════════════
+    function handleImgDrop(e) {
+      e.preventDefault();
+      document.getElementById('img-drop').classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith('image/')) processImage(f);
+    }
+
+    async function processImage(file) {
+      if (!file) return;
+      clearMetaErr('img');
+      document.getElementById('img-results').style.display = 'none';
+      document.getElementById('gps-card').style.display = 'none';
+
+      // Show preview
+      const preview = document.getElementById('img-preview');
+      const objUrl = URL.createObjectURL(file);
+      preview.src = objUrl; preview.style.display = 'block';
+
+      try {
+        // exifr parses ALL EXIF fields including GPS, much more reliable than exif-js
+        const exif = await exifr.parse(file, {
+          tiff: true, exif: true, gps: true, iptc: true,
+          translateValues: true, translateKeys: true, reviveValues: true
+        }) || {};
+
+        const rows = [];
+        rows.push(['File Name', file.name], ['File Size', formatBytes(file.size)], ['MIME Type', file.type || 'unknown']);
+
+        const fieldMap = {
+          Make: 'Camera Make', Model: 'Camera Model', LensModel: 'Lens',
+          DateTimeOriginal: 'Date Taken', CreateDate: 'Created', ModifyDate: 'Modified',
+          ExposureTime: 'Exposure Time', FNumber: 'Aperture (f/)', ISO: 'ISO',
+          FocalLength: 'Focal Length', Flash: 'Flash', WhiteBalance: 'White Balance',
+          ExposureProgram: 'Exposure Mode', MeteringMode: 'Metering Mode',
+          Software: 'Software', Orientation: 'Orientation',
+          ImageWidth: 'Width', ImageHeight: 'Height', ColorSpace: 'Color Space',
+          Copyright: 'Copyright', Artist: 'Photographer',
+        };
+        Object.entries(fieldMap).forEach(([k, label]) => {
+          if (exif[k] !== undefined && exif[k] !== null) {
+            let v = exif[k];
+            if (v instanceof Date) v = v.toISOString().replace('T', ' ').slice(0, 19);
+            else if (typeof v === 'number') v = v.toFixed(4).replace(/\.?0+$/, '');
+            rows.push([label, String(v)]);
+          }
+        });
+        if (!rows.length || rows.length <= 3) rows.push(['EXIF Data', 'No EXIF metadata found in this image']);
+
+        document.getElementById('img-grid').innerHTML = rows.map(([k, v]) => `<div class="meta-key">${k}</div><div class="meta-val">${v}</div>`).join('');
+
+        // GPS
+        if (exif.latitude != null && exif.longitude != null) {
+          const lat = exif.latitude, lng = exif.longitude;
+          document.getElementById('gps-card').style.display = 'block';
+          const gpsRows = [
+            ['Latitude', lat.toFixed(6) + '°'],
+            ['Longitude', lng.toFixed(6) + '°'],
+            ['Altitude', exif.GPSAltitude != null ? exif.GPSAltitude.toFixed(1) + ' m' : '–'],
+            ['Google Maps', `<a class="gps-link" href="https://maps.google.com/?q=${lat},${lng}" target="_blank">maps.google.com/?q=${lat.toFixed(5)},${lng.toFixed(5)}</a>`],
+            ['OpenStreetMap', `<a class="gps-link" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15" target="_blank">openstreetmap.org (zoom 15)</a>`],
+          ];
+          document.getElementById('gps-grid').innerHTML = gpsRows.map(([k, v]) => `<div class="meta-key">${k}</div><div class="meta-val">${v}</div>`).join('');
+          const mmEl = document.getElementById('exif-mini-map');
+          if (!window._exifMap) {
+            window._exifMap = L.map('exif-mini-map', { zoomControl: false, attributionControl: false }).setView([lat, lng], 13);
+            L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png?api_key=04762f72-7659-4f5f-a62c-14ea1adc50df', { maxZoom: 20, attribution: '' }).addTo(window._exifMap);
+            window._exifMarker = L.circleMarker([lat, lng], { radius: 7, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1 }).addTo(window._exifMap);
+          } else {
+            setTimeout(() => window._exifMap.invalidateSize(), 100);
+            window._exifMap.setView([lat, lng], 13);
+            window._exifMarker.setLatLng([lat, lng]);
+          }
+        }
+        document.getElementById('img-results').style.display = 'block';
+      } catch (err) {
+        showMetaErr('img', 'EXIF parse error: ' + err.message);
+      }
+    }
+
+    // ══════════════════════════════════════════════════
+    // METADATA — Video File
+    // ══════════════════════════════════════════════════
+    function handleVidDrop(e) {
+      e.preventDefault();
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith('video/')) processVideo(f);
+    }
+
+    function processVideo(file) {
+      if (!file) return;
+      clearMetaErr('vid');
+      const preview = document.getElementById('vid-preview');
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.onloadedmetadata = () => {
+        const rows = [
+          ['File Name', file.name],
+          ['File Size', formatBytes(file.size)],
+          ['File Type', file.type || 'unknown'],
+          ['Duration', formatDuration(preview.duration)],
+          ['Resolution', `${preview.videoWidth} × ${preview.videoHeight} px`],
+          ['Aspect Ratio', getAspectRatio(preview.videoWidth, preview.videoHeight)],
+          ['Video Width', preview.videoWidth + 'px'],
+          ['Video Height', preview.videoHeight + 'px'],
+          ['Has Audio', preview.mozHasAudio !== undefined ? String(preview.mozHasAudio) : '(check browser)'],
+          ['Last Modified', new Date(file.lastModified).toISOString()],
+        ];
+        document.getElementById('vid-grid').innerHTML = rows.map(([k, v]) => `<div class="meta-key">${k}</div><div class="meta-val">${v}</div>`).join('');
+        document.getElementById('vid-results').style.display = 'block';
+      };
+    }
+
+    // ══════════════════════════════════════════════════
+    // METADATA — IP/Domain
+    // ══════════════════════════════════════════════════
+    async function lookupIP() {
+      const val = document.getElementById('ip-input').value.trim();
+      if (!val) { showMetaErr('ip', 'Enter an IP address or domain'); return; }
+      setMetaLoading('ip', true);
+      document.getElementById('ip-results').style.display = 'none';
+
+      // Try 3 real free CORS-enabled APIs in sequence
+      // 1. ipapi.co — HTTPS, free, no key, 1000/day
+      // 2. freeipapi.com — HTTPS, free, no key
+      // 3. ip-api.com via allorigins proxy — HTTP, most detailed
+      const APIS = [
+        async () => {
+          const r = await fetch(`https://ipapi.co/${encodeURIComponent(val)}/json/`);
+          const d = await r.json();
+          if (d.error) throw new Error(d.reason || d.error);
+          return {
+            ip: d.ip, type: d.version, country: d.country_name, country_code: d.country_code,
+            region: d.region, city: d.city, lat: d.latitude, lng: d.longitude,
+            isp: d.org, asn: d.asn, timezone: d.timezone, utc: '–', currency: d.currency_name, calling: d.country_calling_code
+          };
+        },
+        async () => {
+          const r = await fetch(`https://freeipapi.com/api/json/${encodeURIComponent(val)}`);
+          const d = await r.json();
+          if (d.message) throw new Error(d.message);
+          return {
+            ip: d.ipAddress, type: d.ipVersion === 'IPv4' ? 'IPv4' : 'IPv6', country: d.countryName,
+            country_code: d.countryCode, region: d.regionName, city: d.cityName, lat: d.latitude, lng: d.longitude,
+            isp: d.isp || '–', asn: '–', timezone: d.timeZone, utc: '–', currency: '–', calling: '–'
+          };
+        },
+        async () => {
+          const base = `http://ip-api.com/json/${encodeURIComponent(val)}?fields=66842623`;
+          const r = await proxyFetch(base);
+          const d = await r.json();
+          if (d.status === 'fail') throw new Error(d.message);
+          return {
+            ip: d.query, type: d.query?.includes(':') ? 'IPv6' : 'IPv4', country: d.country,
+            country_code: d.countryCode, region: d.regionName, city: d.city, lat: d.lat, lng: d.lon,
+            isp: d.isp + ' / ' + d.org, asn: d.as, timezone: d.timezone, utc: d.offset ? 'UTC' + d.offset : '–',
+            currency: '–', calling: '–'
+          };
+        }
+      ];
+
+      let d = null;
+      for (const apiFn of APIS) {
+        try { d = await apiFn(); break; } catch (e) { continue; }
+      }
+      if (!d) { showMetaErr('ip', 'All lookup sources failed. Try again later.'); setMetaLoading('ip', false); return; }
+
+      try {
+        const rows = [
+          ['IP Address', d.ip || val],
+          ['Type', d.type || '–'],
+          ['Country', d.country || '–'],
+          ['Country Code', d.country_code || '–'],
+          ['Region', d.region || '–'],
+          ['City', d.city || '–'],
+          ['Latitude', d.lat?.toFixed?.(4) || String(d.lat || '–')],
+          ['Longitude', d.lng?.toFixed?.(4) || String(d.lng || '–')],
+          ['ISP / Org', d.isp || '–'],
+          ['ASN', d.asn || '–'],
+          ['Timezone', d.timezone || '–'],
+          ['UTC Offset', d.utc || '–'],
+          ['Currency', d.currency || '–'],
+          ['Calling Code', d.calling || '–'],
+        ];
+        document.getElementById('ip-grid').innerHTML = rows.map(([k, v]) => `<div class="meta-key">${k}</div><div class="meta-val">${v}</div>`).join('');
+        document.getElementById('ip-results').style.display = 'block';
+        clearMetaErr('ip');
+
+        // Mini map — coords are stored as d.lat / d.lng by the API normalizer
+        if (d.lat && d.lng) {
+          const lat = d.lat, lng = d.lng;
+          const label = `${d.ip || val} · ${d.city || ''} ${d.country_code || ''}`.trim();
+          document.getElementById('ip-results').style.display = 'block'; // ensure visible before init
+          setTimeout(() => {
+            if (!window._ipMap) {
+              window._ipMap = L.map('ip-mini-map', { zoomControl: false, attributionControl: false }).setView([lat, lng], 8);
+              L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png?api_key=04762f72-7659-4f5f-a62c-14ea1adc50df', { maxZoom: 20, attribution: '' }).addTo(window._ipMap);
+              window._ipMarker = L.circleMarker([lat, lng], { radius: 9, color: '#38bdf8', fillColor: '#38bdf8', fillOpacity: 0.85, weight: 2 })
+                .bindPopup(`<div class="mpop"><div class="mpop-title">${label}</div><div class="mpop-row">LAT: <span>${lat.toFixed(4)}</span></div><div class="mpop-row">LNG: <span>${lng.toFixed(4)}</span></div></div>`, { className: '' })
+                .addTo(window._ipMap)
+                .openPopup();
+            } else {
+              window._ipMap.setView([lat, lng], 8);
+              window._ipMarker.setLatLng([lat, lng]);
+              window._ipMarker.setPopupContent(`<div class="mpop"><div class="mpop-title">${label}</div><div class="mpop-row">LAT: <span>${lat.toFixed(4)}</span></div><div class="mpop-row">LNG: <span>${lng.toFixed(4)}</span></div></div>`);
+              window._ipMarker.openPopup();
+            }
+            window._ipMap.invalidateSize();
+          }, 50); // brief defer so the results div is visible and map has real dimensions
+        }
+      } catch (e) {
+        showMetaErr('ip', 'Error: ' + e.message);
+      } finally { setMetaLoading('ip', false); }
+    }
+
+    // Meta helpers
+    function showMetaTab(name, btn) {
+      document.querySelectorAll('.meta-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.meta-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('mpane-' + name).classList.add('active');
+    }
+    function showMetaErr(prefix, msg) {
+      const el = document.getElementById(prefix + '-err');
+      el.textContent = msg; el.style.display = 'block';
+      setMetaLoading(prefix, false);
+    }
+    function clearMetaErr(prefix) {
+      const el = document.getElementById(prefix + '-err');
+      if (el) { el.textContent = ''; el.style.display = 'none'; }
+    }
+    function setMetaLoading(prefix, on) {
+      const el = document.getElementById(prefix + '-loading');
+      if (el) el.style.display = on ? 'block' : 'none';
+    }
+    function formatBytes(b) { if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
+    function formatDuration(s) { if (isNaN(s)) return '–'; const m = Math.floor(s / 60), sec = Math.floor(s % 60); return `${m}:${String(sec).padStart(2, '0')}`; }
+    function getAspectRatio(w, h) { const g = (a, b) => b ? g(b, a % b) : a; const d = g(w, h); return `${w / d}:${h / d}`; }
+
+    // ══════════════════════════════════════════════════
+    // RADIO PLAYER
+    // ══════════════════════════════════════════════════
+    let currentStation = null, isPlaying = false, waveAnim = null;
+    const audioEl = document.getElementById('radio-audio');
+
+
+    // ══════════════════════════════════════════════════
+    // OPENMHZ LIVE SCANNER ENGINE
+    // Uses api.openmhz.com/{system}/calls?time=0
+    // Returns JSON with array of calls, each has:
+    //   filename: relative path on openmhz CDN
+    //   talkgroup, len, start_time, etc.
+    // We fetch recent calls, play them sequentially, then poll for new ones.
+    // ══════════════════════════════════════════════════
+    let _omhzPoller = null;   // setInterval handle
+    let _omhzQueue = [];     // pending call filenames
+    let _omhzSeen = new Set(); // dedupe
+    let _omhzSystem = null;   // active shortName
+    let _omhzAudio = null;   // HTMLAudioElement playing CDN mp3
+
+    async function startOpenMHzScanner(stn) {
+      stopOpenMHz();
+      _omhzSystem = stn.shortName;
+      setPlayerStatus('FETCHING CALLS…', false);
+      document.getElementById('rp-embed-wrap').style.display = 'none';
+
+      // Build the scanner UI in embed wrap
+      const wrap = document.getElementById('rp-embed-wrap');
+      wrap.style.display = 'block';
+      wrap.innerHTML = `
+    <div id="omhz-ui" style="display:flex;flex-direction:column;height:100%;background:var(--bg);padding:10px;box-sizing:border-box;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="omhz-led" style="width:8px;height:8px;border-radius:50%;background:#444;flex-shrink:0"></div>
+        <div id="omhz-call-info" style="font-family:var(--mono);font-size:10px;color:var(--g);flex:1">Waiting for calls…</div>
+      </div>
+      <div style="font-size:9px;color:var(--dim);font-family:var(--mono)" id="omhz-tg">TALKGROUP: –</div>
+      <div style="font-size:9px;color:var(--dim);font-family:var(--mono)" id="omhz-time">TIME: –</div>
+      <div style="flex:1;overflow-y:auto;border:1px solid var(--border2);border-radius:2px;padding:4px" id="omhz-log"></div>
+      <div style="font-size:8px;color:var(--dim);text-align:right">src: api.openmhz.com/${stn.shortName}</div>
+    </div>`;
+
+      await fetchOpenMHzCalls();
+      // Poll every 8s for new calls
+      _omhzPoller = setInterval(fetchOpenMHzCalls, 8000);
+    }
+
+    async function fetchOpenMHzCalls() {
+      if (!_omhzSystem) return;
+      try {
+        const url = `https://api.openmhz.com/${_omhzSystem}/calls?time=0`;
+        const r = await proxyFetch(url);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (!d.calls || !Array.isArray(d.calls)) return;
+
+        let added = 0;
+        // calls newest-first, reverse to queue oldest first
+        const sorted = [...d.calls].reverse();
+        for (const c of sorted) {
+          const key = c.filename || c.start_time;
+          if (!key || _omhzSeen.has(key)) continue;
+          _omhzSeen.add(key);
+          _omhzQueue.push(c);
+          added++;
+        }
+
+        // Log new entries
+        if (added > 0) {
+          const log = document.getElementById('omhz-log');
+          if (log) {
+            const sorted2 = [...d.calls].slice(0, 12);
+            log.innerHTML = sorted2.map(c => {
+              const t = c.start_time ? new Date(c.start_time * 1000).toLocaleTimeString() : '–';
+              const tg = c.talkgroup_description || c.talkgroupNum || '–';
+              const dur = c.len ? Math.round(c.len) + 's' : '';
+              return `<div style="font-size:9px;color:var(--dim);padding:2px 0;border-bottom:1px solid var(--border2);font-family:var(--mono)">` +
+                `<span style="color:var(--g2)">${t}</span> ${tg} <span style="opacity:.5">${dur}</span></div>`;
+            }).join('');
+          }
+        }
+
+        // Start playing if idle
+        if (!_omhzAudio || _omhzAudio.ended || _omhzAudio.paused) {
+          playNextOpenMHz();
+        }
+      } catch (e) {
+        const ci = document.getElementById('omhz-call-info');
+        if (ci) ci.textContent = 'API error: ' + e.message;
+      }
+    }
+
+    function playNextOpenMHz() {
+      if (!_omhzQueue.length || !_omhzSystem) return;
+      const call = _omhzQueue.shift();
+
+      // OpenMHz CDN base: files are at calls/{system}/{filename}
+      // The API returns filename like "2025/3/8/1234567890_nypd.mp3"
+      const filename = call.filename || '';
+      const audioUrl = filename.startsWith('http')
+        ? filename
+        : `https://api.openmhz.com/${_omhzSystem}/calls/download?filename=${encodeURIComponent(filename)}`;
+
+      const led = document.getElementById('omhz-led');
+      const ci = document.getElementById('omhz-call-info');
+      const tg = document.getElementById('omhz-tg');
+      const tim = document.getElementById('omhz-time');
+
+      if (led) led.style.background = '#22c55e';
+      if (ci) ci.textContent = call.talkgroup_description || call.talkgroupNum || 'Unknown Talkgroup';
+      if (tg) tg.textContent = 'TALKGROUP: ' + (call.talkgroupNum || '–');
+      if (tim) tim.textContent = 'TIME: ' + (call.start_time ? new Date(call.start_time * 1000).toLocaleTimeString() : '–');
+
+      if (_omhzAudio) { _omhzAudio.pause(); _omhzAudio.src = ''; }
+      _omhzAudio = new Audio(audioUrl);
+      _omhzAudio.volume = audioEl ? audioEl.volume : 1;
+      _omhzAudio.play().catch(() => { });
+      _omhzAudio.onended = () => {
+        if (led) led.style.background = '#444';
+        if (ci) ci.textContent = _omhzQueue.length ? 'Next call in queue…' : 'Waiting for calls…';
+        setTimeout(playNextOpenMHz, 200);
+      };
+      setPlayerStatus('LIVE — SCANNER RECEIVING', true);
+      isPlaying = true;
+      startWave();
+    }
+
+    function stopOpenMHz() {
+      if (_omhzPoller) { clearInterval(_omhzPoller); _omhzPoller = null; }
+      if (_omhzAudio) { _omhzAudio.pause(); _omhzAudio.src = ''; _omhzAudio = null; }
+      _omhzQueue = []; _omhzSeen = new Set(); _omhzSystem = null;
+    }
+
+    function buildStationList() {
+      const container = document.getElementById('station-list');
+      container.innerHTML = '';
+      const cats = [...new Set(STATIONS.map(s => s.cat))];
+      cats.forEach(cat => {
+        const lbl = document.createElement('div'); lbl.className = 'radio-cat-lbl'; lbl.textContent = cat;
+        container.appendChild(lbl);
+        STATIONS.filter(s => s.cat === cat).forEach(stn => {
+          const el = document.createElement('div'); el.className = 'station';
+          const badge = stn.stream ? '🔊' : stn.embed ? '📡' : '🔗';
+          const hint = stn.stream ? 'Direct stream' : stn.embed ? 'Live embedded player' : 'External — requires browser';
+          el.innerHTML = `<div class="stn-led ${stn.type}"></div><div class="stn-info"><div class="stn-name">${stn.name}</div><div class="stn-meta">${stn.meta}</div></div><span class="stn-tag ${stn.type}" title="${hint}">${badge}</span>`;
+          el.onclick = () => selectStation(stn, el);
+          container.appendChild(el);
+        });
+      });
+    }
+
+    function setPlayerStatus(txt, ledOn) {
+      document.getElementById('rp-status-txt').textContent = txt;
+      document.getElementById('rp-status-led').style.display = ledOn ? 'flex' : 'none';
+    }
+
+    function showExternalCard(stn) {
+      const embedWrap = document.getElementById('rp-embed-wrap');
+      embedWrap.style.display = 'block';
+      const urlTarget = stn.link || stn.url || '#';
+      embedWrap.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100%;gap:14px;padding:20px;background:var(--bg);text-align:center">
+      <div style="font-size:28px;opacity:.3">🔗</div>
+      <div style="font-family:var(--head);font-size:10px;color:var(--g);letter-spacing:2px">EXTERNAL FEED</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--dim);line-height:1.8;max-width:260px">
+        This feed requires a Broadcastify Premium account.<br>Click below to open in your browser.
+      </div>
+      <a href="${urlTarget}" target="_blank" rel="noopener"
+        style="padding:8px 20px;background:var(--g3);border:1px solid var(--g2);color:var(--g);
+          font-family:var(--mono);font-size:9px;letter-spacing:2px;text-decoration:none;
+          border-radius:2px;cursor:pointer;text-transform:uppercase"
+        onmouseover="this.style.background='rgba(34,197,94,.15)'"
+        onmouseout="this.style.background='var(--g3)'">
+        ⤴ OPEN IN BROWSER
+      </a>
+    </div>`;
+      setPlayerStatus('EXTERNAL — OPEN IN BROWSER', false);
+    }
+
+    async function selectStation(stn, el) {
+      document.querySelectorAll('.station').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      currentStation = stn;
+
+      // Reset
+      stopAudio();
+      const embedWrap = document.getElementById('rp-embed-wrap');
+      embedWrap.style.display = 'none'; embedWrap.innerHTML = '';
+      document.getElementById('rp-idle').style.display = 'none';
+      document.getElementById('rp-playing').style.display = 'flex';
+      document.getElementById('rp-name').textContent = stn.name;
+      document.getElementById('rp-meta').textContent = `${stn.meta} • ${stn.cat}`;
+      setPlayerStatus('CONNECTING…', false);
+
+      // ── 1. OpenMHz Live API scanner ──
+      if (stn.shortName) {
+        startOpenMHzScanner(stn);
+        return;
+      }
+
+      // ── 2. Direct audio stream (HTTPS = everywhere; HTTP = local file only) ──
+      if (stn.stream) {
+        audioEl.src = stn.stream;
+        setPlayerStatus('BUFFERING…', false);
+        // On error try fallback stream, then open externally
+        audioEl.onerror = () => {
+          if (stn.fallback && audioEl.src !== stn.fallback) {
+            audioEl.src = stn.fallback;
+            audioEl.load();
+            audioEl.play().then(() => {
+              isPlaying = true;
+              document.getElementById('rp-play-btn').textContent = '⏸ PAUSE';
+              setPlayerStatus('RECEIVING (FALLBACK SERVER)', true);
+              startWave();
+            }).catch(() => {
+              setPlayerStatus('STREAM UNAVAILABLE', false);
+              if (stn.url) setTimeout(() => window.open(stn.url, '_blank'), 800);
+            });
+          } else {
+            setPlayerStatus('STREAM UNAVAILABLE', false);
+            if (stn.url) setTimeout(() => window.open(stn.url, '_blank'), 800);
+          }
+        };
+        playAudio();
+        return;
+      }
+
+      // ── 3. External link only ──
+      showExternalCard(stn);
+    }
+
+    function filterStations(v) {
+      document.querySelectorAll('.station').forEach(el => {
+        const txt = el.textContent.toLowerCase();
+        el.style.display = (!v || txt.includes(v.toLowerCase())) ? '' : 'none';
+      });
+    }
+
+    function playAudio() {
+      audioEl.play().then(() => {
+        isPlaying = true;
+        document.getElementById('rp-play-btn').textContent = '⏸ PAUSE';
+        setPlayerStatus('RECEIVING', true);
+        startWave();
+      }).catch((err) => {
+        // Stream failed — try opening externally if we have a fallback URL
+        const fallback = currentStation?.link || currentStation?.url;
+        if (fallback) {
+          setPlayerStatus('STREAM BLOCKED — OPENING IN BROWSER', false);
+          setTimeout(() => window.open(fallback, '_blank'), 600);
+        } else {
+          setPlayerStatus('STREAM UNAVAILABLE', false);
+        }
+        console.warn('Audio play failed:', err);
+      });
+    }
+
+    function togglePlay() {
+      if (!currentStation) { setPlayerStatus('NO STATION SELECTED', false); return; }
+      // Embed-based stations (OpenMHz): toggle is not applicable
+      if (currentStation.embed) { return; }
+      if (!audioEl.src || audioEl.src === window.location.href) {
+        if (currentStation.stream) { audioEl.src = currentStation.stream; }
+        else { showExternalCard(currentStation); return; }
+      }
+      if (isPlaying) {
+        audioEl.pause(); isPlaying = false;
+        document.getElementById('rp-play-btn').textContent = '▶ PLAY';
+        stopWave();
+        setPlayerStatus('PAUSED', false);
+      } else {
+        playAudio();
+      }
+    }
+
+    function stopAudio() {
+      stopOpenMHz();
+      audioEl.pause(); audioEl.src = '';
+      isPlaying = false;
+      document.getElementById('rp-play-btn').textContent = '▶ PLAY';
+      document.getElementById('rp-status-led').style.display = 'none';
+      document.getElementById('rp-embed-wrap').style.display = 'none';
+      document.getElementById('rp-embed-wrap').innerHTML = '';
+      document.getElementById('rp-status-txt').textContent = 'STOPPED';
+      stopWave();
+    }
+
+    function rewindAudio(s) {
+      if (audioEl.duration && !isNaN(audioEl.duration)) audioEl.currentTime = Math.max(0, audioEl.currentTime - s);
+    }
+    function skipAhead(s) {
+      if (audioEl.duration && !isNaN(audioEl.duration)) audioEl.currentTime = Math.min(audioEl.duration, audioEl.currentTime + s);
+    }
+    function setVolume(v) { audioEl.volume = v; document.getElementById('rp-vol-pct').textContent = Math.round(v * 100) + '%'; }
+
+    function seekAudio(e) {
+      const tl = document.getElementById('rp-timeline');
+      const pct = e.offsetX / tl.offsetWidth;
+      if (audioEl.duration && !isNaN(audioEl.duration)) audioEl.currentTime = pct * audioEl.duration;
+    }
+
+    audioEl.addEventListener('timeupdate', () => {
+      if (!audioEl.duration || isNaN(audioEl.duration)) { document.getElementById('rp-dur').textContent = 'LIVE'; document.getElementById('rp-progress').style.width = '100%'; return; }
+      const pct = (audioEl.currentTime / audioEl.duration) * 100;
+      document.getElementById('rp-progress').style.width = pct + '%';
+      document.getElementById('rp-cur').textContent = formatDuration(audioEl.currentTime);
+      document.getElementById('rp-dur').textContent = formatDuration(audioEl.duration);
+    });
+
+    // Real Web Audio API waveform
+    let _audioCtx = null, _analyser = null, _waveRAF = null, _srcNode = null;
+    function startWave() {
+      const waveEl = document.getElementById('rp-wave');
+      if (!waveEl.children.length) { for (let i = 0; i < 40; i++) { const b = document.createElement('div'); b.className = 'rp-bar'; waveEl.appendChild(b); } }
+      // Uses module-level: const audioEl = document.getElementById('radio-audio')
+      try {
+        if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (_audioCtx.state === 'suspended') _audioCtx.resume();
+        if (!_srcNode || _srcNode.mediaElement !== audioEl) {
+          if (_srcNode) { try { _srcNode.disconnect(); } catch (e) { } }
+          _srcNode = _audioCtx.createMediaElementSource(audioEl);
+          _analyser = _audioCtx.createAnalyser(); _analyser.fftSize = 128;
+          _srcNode.connect(_analyser); _analyser.connect(_audioCtx.destination);
+        }
+        const data = new Uint8Array(_analyser.frequencyBinCount);
+        cancelAnimationFrame(_waveRAF);
+        const bars = [...waveEl.querySelectorAll('.rp-bar')];
+        (function draw() {
+          if (!isPlaying) return;
+          _waveRAF = requestAnimationFrame(draw);
+          _analyser.getByteFrequencyData(data);
+          bars.forEach((b, i) => { const v = (data[Math.floor(i * data.length / bars.length)] || 0) / 255; b.style.height = Math.max(3, v * 72) + 'px'; b.style.opacity = 0.3 + v * 0.7; });
+        })();
+        return;
+      } catch (e) { }
+      // CSS fallback
+      cancelAnimationFrame(_waveRAF);
+      const bars = [...waveEl.querySelectorAll('.rp-bar')];
+      (function fallback() {
+        if (!isPlaying) return;
+        _waveRAF = requestAnimationFrame(fallback);
+        bars.forEach(b => { b.style.height = (4 + Math.random() * 60) + 'px'; b.style.opacity = 0.4 + Math.random() * 0.6; });
+      })();
+    }
+    function stopWave() {
+      cancelAnimationFrame(_waveRAF);
+      document.querySelectorAll('.rp-bar').forEach(b => { b.style.height = '3px'; b.classList.add('inactive'); });
+    }
+
+    // ══════════════════════════════════════════════════
+    // TOOLS SECTION
+    // ══════════════════════════════════════════════════
+    let currentToolUrl = null;
+
+    function buildToolsMain() {
+      const c = document.getElementById('tools-main-list');
+      c.innerHTML = '';
+      Object.entries(TOOLS_DATA).forEach(([cat, items]) => {
+        const lbl = document.createElement('div'); lbl.className = 'tool-cat-lbl'; lbl.textContent = cat;
+        c.appendChild(lbl);
+        items.forEach(t => {
+          const b = document.createElement('button');
+          b.className = 'tool-entry';
+          b.innerHTML = t.n + (t.native ? '<span style="margin-left:4px;font-size:7px;color:var(--g);letter-spacing:.5px">●LIVE</span>' : '');
+          if (t.native) b.onclick = () => { document.querySelectorAll('.tool-entry').forEach(x => x.classList.remove('active')); b.classList.add('active'); launchNativeTool(t.native, t.n, t.desc || ''); };
+          else if (t.u) b.onclick = () => loadToolFrame(t.u, t.n, b);
+          c.appendChild(b);
+        });
+      });
+    }
+
+    function launchNativeTool(fnName, title, desc) {
+      // Hide iframe + blocked + placeholder, show native panel
+      document.getElementById('tool-iframe').style.display = 'none';
+      document.getElementById('tool-blocked').style.display = 'none';
+      document.getElementById('tools-placeholder').style.display = 'none';
+      document.getElementById('tool-url-disp').textContent = title + ' — NATIVE';
+      // Create or swap native panel
+      let panel = document.getElementById('tn-panel-active');
+      if (panel) panel.remove();
+      panel = document.createElement('div');
+      panel.id = 'tn-panel-active';
+      panel.className = 'tool-native active';
+      document.querySelector('.tool-frame-area').appendChild(panel);
+      if (window[fnName]) window[fnName](panel);
+      else panel.innerHTML = `<div class="tn-title">${title}</div><div class="tn-sub">${desc}</div><div style="color:var(--dim);font-family:var(--mono);font-size:10px;margin-top:10px">Native implementation coming soon.</div>`;
+    }
+
+    function filterTools2(v) {
+      document.querySelectorAll('#tools-main-list .tool-entry').forEach(b => {
+        b.style.display = (!v || b.textContent.toLowerCase().includes(v.toLowerCase())) ? '' : 'none';
+      });
+    }
+
+    // Wire up tool iframe events via addEventListener (NOT inline attrs — those fire before script runs)
+    (function () {
+      const iframe = document.getElementById('tool-iframe');
+      if (!iframe) return;
+      iframe.addEventListener('load', function () {
+        clearTimeout(window._toolTimer);
+        // If src is blank, ignore (initial load)
+        if (!currentToolUrl) return;
+        try {
+          const loc = iframe.contentWindow.location.href;
+          // Same-origin loaded fine (e.g. about:blank after reset)
+          if (loc === 'about:blank' || loc === '') showToolBlocked();
+        } catch (e) {
+          // Cross-origin — loaded fine, CORS just prevents reading the URL
+          // This is actually the GOOD case for external tools
+        }
+      });
+      iframe.addEventListener('error', function () {
+        clearTimeout(window._toolTimer);
+        showToolBlocked();
+      });
+    })();
+
+    function showToolBlocked() {
+      const iframe = document.getElementById('tool-iframe');
+      iframe.style.display = 'none';
+      document.getElementById('tool-blocked').style.display = 'flex';
+    }
+
+    function loadToolFrame(url, name, btn) {
+      currentToolUrl = url;
+      document.querySelectorAll('.tool-entry').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      document.getElementById('tool-url-disp').textContent = url;
+      document.getElementById('tool-blocked-link').href = url;
+      document.getElementById('tool-blocked').style.display = 'none';
+      document.getElementById('tools-placeholder').style.display = 'none';
+      const iframe = document.getElementById('tool-iframe');
+      iframe.style.display = 'block';
+      iframe.src = 'about:blank'; // reset first to ensure load fires
+      setTimeout(() => {
+        iframe.src = url;
+        // Fallback: many sites block iframes via X-Frame-Options or CSP.
+        // After 6s, try to detect a blank/broken frame.
+        clearTimeout(window._toolTimer);
+        window._toolTimer = setTimeout(() => {
+          try {
+            const loc = iframe.contentWindow.location.href;
+            if (loc === 'about:blank' || !loc) showToolBlocked();
+          } catch (e) {
+            // Cross-origin exception = loaded correctly in iframe
+          }
+        }, 6000);
+      }, 50);
+    }
+
+    function reloadTool() { if (currentToolUrl) document.getElementById('tool-iframe').src = currentToolUrl; }
+    function openToolExternal() { if (currentToolUrl) window.open(currentToolUrl, '_blank'); }
+
+
+    // ══════════════════════════════════════════════════
+    // NATIVE TOOL IMPLEMENTATIONS
+    // ══════════════════════════════════════════════════
+
+    // ── shared helpers ──
+    function tnHtml(panel, html) { panel.innerHTML = html; }
+    function tnGrid(rows) { return rows.map(([k, v]) => `<div class="tn-grid-key">${k}</div><div class="tn-grid-val">${v}</div>`).join(''); }
+    function tnCard(title, body) { return `<div class="tn-card"><div class="tn-card-hdr">${title}</div><div class="tn-card-body">${body}</div></div>`; }
+    function tnForm(id, placeholder, btnLabel, onrun, extra = '') {
+      return `<div class="tn-form">${extra}<input class="tn-input" id="${id}-inp" placeholder="${placeholder}" onkeydown="if(event.key==='Enter')${onrun}"><button class="tn-btn" onclick="${onrun}">${btnLabel}</button></div><div class="tn-error" id="${id}-err"></div><div class="tn-loading" id="${id}-load">Querying…</div>`;
+    }
+    function tnSetLoad(id, on) { const el = document.getElementById(id + '-load'); if (el) el.className = 'tn-loading' + (on ? ' on' : ''); }
+    function tnSetErr(id, msg) { const el = document.getElementById(id + '-err'); if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; } }
+    function tnVal(id) { const el = document.getElementById(id + '-inp'); return el ? el.value.trim() : ''; }
+
+    // ─────────────────────────────────────────────────
+    // 1. Username Search
+    // ─────────────────────────────────────────────────
+    window.nativeUsernameSearch = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">USERNAME SEARCH</div>
+<div class="tn-sub">Enter a username to generate instant profile links across 30+ platforms. Click any row to open it in the tool frame.</div>
+${tnForm('usr', 'username / handle', 'SEARCH', 'runUsernameSearch()')}
+<div id="usr-results" style="display:none"></div>`;
+    };
+    window.runUsernameSearch = function () {
+      const u = tnVal('usr'); if (!u) { tnSetErr('usr', 'Enter a username'); return; }
+      tnSetErr('usr', '');
+      const platforms = [
+        { n: 'Twitter/X', url: `https://x.com/${u}` },
+        { n: 'Instagram', url: `https://instagram.com/${u}` },
+        { n: 'TikTok', url: `https://tiktok.com/@${u}` },
+        { n: 'GitHub', url: `https://github.com/${u}` },
+        { n: 'Reddit', url: `https://reddit.com/user/${u}` },
+        { n: 'LinkedIn', url: `https://linkedin.com/in/${u}` },
+        { n: 'Facebook', url: `https://facebook.com/${u}` },
+        { n: 'YouTube', url: `https://youtube.com/@${u}` },
+        { n: 'Twitch', url: `https://twitch.tv/${u}` },
+        { n: 'Pinterest', url: `https://pinterest.com/${u}` },
+        { n: 'Snapchat', url: `https://snapchat.com/add/${u}` },
+        { n: 'Medium', url: `https://medium.com/@${u}` },
+        { n: 'Tumblr', url: `https://${u}.tumblr.com` },
+        { n: 'SoundCloud', url: `https://soundcloud.com/${u}` },
+        { n: 'Spotify', url: `https://open.spotify.com/user/${u}` },
+        { n: 'Steam', url: `https://steamcommunity.com/id/${u}` },
+        { n: 'Roblox', url: `https://roblox.com/user.aspx?username=${u}` },
+        { n: 'Patreon', url: `https://patreon.com/${u}` },
+        { n: 'DeviantArt', url: `https://deviantart.com/${u}` },
+        { n: 'Flickr', url: `https://flickr.com/people/${u}` },
+        { n: 'Vimeo', url: `https://vimeo.com/${u}` },
+        { n: 'WhatsMyName', url: `https://whatsmyname.app/?q=${u}` },
+        { n: 'Sherlock (CLI)', url: `https://github.com/sherlock-project/sherlock` },
+        { n: 'OSINT Industries', url: `https://osint.industries/` },
+      ];
+      const grid = platforms.map(p => `<div class="tn-platform-link" onclick="loadToolFrame('${p.url}','${p.n} — ${u}')"><div class="tn-platform-dot chk"></div>${p.n}</div>`).join('');
+      document.getElementById('usr-results').style.display = 'block';
+      document.getElementById('usr-results').innerHTML = `<div class="tn-section-lbl">PROFILE LINKS FOR "${u.toUpperCase()}" — click to open in tool panel</div><div class="tn-platform-grid">${grid}</div>`;
+    };
+
+    // ─────────────────────────────────────────────────
+    // 2. People Finder
+    // ─────────────────────────────────────────────────
+    window.nativePeopleFinder = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">PEOPLE FINDER HUB</div>
+<div class="tn-sub">Search across people-finder aggregators. Enter a full name plus optional location.</div>
+<div class="tn-form"><input class="tn-input" id="pf-name" placeholder="First Last" style="flex:2"><input class="tn-input" id="pf-loc" placeholder="City, State (optional)" style="flex:1"><button class="tn-btn" onclick="runPeopleFinder()">SEARCH</button></div>
+<div id="pf-results" style="display:none"></div>`;
+    };
+    window.runPeopleFinder = function () {
+      const name = document.getElementById('pf-name').value.trim();
+      if (!name) { return; }
+      const loc = document.getElementById('pf-loc').value.trim();
+      const q = encodeURIComponent(name), ql = encodeURIComponent(name + (loc ? ' ' + loc : ''));
+      const sites = [
+        { n: 'TruePeopleSearch', url: `https://www.truepeoplesearch.com/results?name=${q}${loc ? '&citystatezip=' + encodeURIComponent(loc) : ''}` },
+        { n: 'FastPeopleSearch', url: `https://www.fastpeoplesearch.com/name/${q.replace(/%20/g, '-')}` },
+        { n: 'Spokeo', url: `https://www.spokeo.com/search?q=${q}` },
+        { n: 'Pipl', url: `https://pipl.com/search/?q=${q}` },
+        { n: 'PeekYou', url: `https://www.peekyou.com/${name.toLowerCase().replace(/ /g, '_')}` },
+        { n: 'Whitepages', url: `https://www.whitepages.com/name/${q.replace(/%20/g, '-')}` },
+        { n: 'ZabaSearch', url: `https://www.zabasearch.com/people/${q.replace(/%20/g, '+')}/` },
+      ];
+      document.getElementById('pf-results').style.display = 'block';
+      document.getElementById('pf-results').innerHTML = `<div class="tn-section-lbl">SEARCH "${name.toUpperCase()}" — click to open in tool panel</div><div class="tn-platform-grid">${sites.map(s => `<div class="tn-platform-link" onclick="loadToolFrame('${s.url}','${s.n}')"><div class="tn-platform-dot chk"></div>${s.n}</div>`).join('')}</div>`;
+    };
+
+    // ─────────────────────────────────────────────────
+    // 3. Have I Been Pwned (k-anonymity, no API key)
+    // ─────────────────────────────────────────────────
+    window.nativeHIBP = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">EMAIL BREACH CHECK</div>
+<div class="tn-sub">Check an email address against the HaveIBeenPwned database of 12+ billion compromised accounts. Uses the public HIBP API.</div>
+${tnForm('hibp', 'email@example.com', 'CHECK BREACHES', 'runHIBP()')}
+<div id="hibp-results" style="display:none"></div>`;
+    };
+    window.runHIBP = async function () {
+      const email = tnVal('hibp');
+      if (!email || !email.includes('@')) { tnSetErr('hibp', 'Enter a valid email address'); return; }
+      tnSetErr('hibp', ''); tnSetLoad('hibp', true);
+      document.getElementById('hibp-results').style.display = 'none';
+      try {
+        const r = await Promise.race([
+          proxyFetch('https://haveibeenpwned.com/api/v3/breachedaccount/' + encodeURIComponent(email) + '?truncateResponse=false', 8000).catch(() => null),
+          new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 8000))
+        ]);
+        let breaches = [];
+        if (r && r.ok) { try { breaches = await r.json(); } catch (e) { } }
+        const count = Array.isArray(breaches) ? breaches.length : 0;
+        const badge = count ? `<span class="tn-badge red">${count} BREACH${count > 1 ? 'ES' : ''} FOUND</span>` : `<span class="tn-badge green">CLEAN — NO BREACHES</span>`;
+        let rows = '';
+        if (count && Array.isArray(breaches)) {
+          rows = '<table class="tn-table"><thead><tr><th>SITE</th><th>DATE</th><th>DATA TYPES</th><th>PWNED COUNT</th></tr></thead><tbody>' +
+            breaches.slice(0, 20).map(b => `<tr><td><b>${b.Name || b.Domain || '?'}</b></td><td>${b.BreachDate || '?'}</td><td style="color:var(--amber)">${(b.DataClasses || []).slice(0, 4).join(', ')}</td><td>${b.PwnCount?.toLocaleString() || '?'}</td></tr>`).join('') + '</tbody></table>';
+        }
+        document.getElementById('hibp-results').style.display = 'block';
+        document.getElementById('hibp-results').innerHTML = tnCard(`RESULTS FOR ${email.toUpperCase()}`, `<div style="margin-bottom:8px">${badge}</div><div class="tn-grid">${tnGrid([['Email', email], ['Breaches Found', count]])}</div>`) +
+          (rows ? `<div class="tn-card" style="margin-top:8px"><div class="tn-card-hdr">BREACH DETAILS</div><div class="tn-card-body" style="padding:0">${rows}</div></div>` : '');
+      } catch (e) {
+        tnSetErr('hibp', 'Lookup failed: ' + e.message + '. Try hibp.pw as alternative.');
+      } finally { tnSetLoad('hibp', false); }
+    };
+
+    // ─────────────────────────────────────────────────
+    // 4. Reverse Image Search
+    // ─────────────────────────────────────────────────
+    window.nativeReverseImage = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">REVERSE IMAGE SEARCH</div>
+<div class="tn-sub">Enter an image URL or upload a file to search across TinEye, Google Lens, Yandex, and Bing Visual Search simultaneously.</div>
+<div class="tn-form">
+  <input class="tn-input" id="rimg-url" placeholder="https://example.com/image.jpg" style="flex:1">
+  <button class="tn-btn" onclick="document.getElementById('rimg-file').click()">UPLOAD</button>
+  <input type="file" id="rimg-file" accept="image/*" style="display:none" onchange="handleRimgFile(this.files[0])">
+</div>
+<div id="rimg-preview-wrap" style="display:none;margin:8px 0"><img id="rimg-preview" style="max-height:120px;max-width:240px;border:1px solid var(--border);border-radius:2px"></div>
+<div class="tn-error" id="rimg-err"></div>
+<div id="rimg-engines" style="display:none">
+  <div class="tn-section-lbl">SEARCH ENGINES — click to open in tool panel</div>
+  <div class="rev-img-engines" id="rimg-btn-list"></div>
+</div>`;
+      document.getElementById('rimg-url').addEventListener('input', function () { if (this.value.trim()) showRimgEngines(this.value.trim()); });
+    };
+    window.handleRimgFile = async function (file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const b64 = e.target.result;
+        document.getElementById('rimg-preview').src = b64;
+        document.getElementById('rimg-preview-wrap').style.display = 'block';
+        // For uploaded files we can only use engines that accept data URLs or we construct a google image search via the lens upload
+        showRimgEngines(b64, true);
+      };
+      reader.readAsDataURL(file);
+    };
+    window.showRimgEngines = function (url, isFile = false) {
+      const engines = [
+        { n: 'TinEye', url: isFile ? 'https://tineye.com/search' : 'https://tineye.com/search?url=' + encodeURIComponent(url) },
+        { n: 'Google Lens', url: isFile ? 'https://lens.google.com/upload' : 'https://lens.google.com/search?url=' + encodeURIComponent(url) },
+        { n: 'Yandex Images', url: isFile ? 'https://yandex.com/images/search' : 'https://yandex.com/images/search?rpt=imageview&url=' + encodeURIComponent(url) },
+        { n: 'Bing Visual', url: isFile ? 'https://www.bing.com/images/search?view=detailv2&iss=sbi' : 'https://www.bing.com/images/search?view=detailv2&iss=sbi&FORM=SBIVSP&q=imgurl:' + encodeURIComponent(url) },
+        { n: 'Baidu Images', url: isFile ? 'https://graph.baidu.com/upload' : 'https://graph.baidu.com/details?isfromtusoupc=1&tn=pc&carousel=0&imageUrl=' + encodeURIComponent(url) },
+        { n: 'EXIF.tools', url: isFile ? 'https://exif.tools/' : 'https://exif.tools/?url=' + encodeURIComponent(url) },
+      ];
+      document.getElementById('rimg-engines').style.display = 'block';
+      document.getElementById('rimg-btn-list').innerHTML = engines.map(e => `<button class="rev-img-btn" onclick="loadToolFrame('${e.url}','${e.n}')">${e.n}</button>`).join('');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 5. YouTube Metadata (native link to meta tab)
+    // ─────────────────────────────────────────────────
+    window.nativeYTMeta = function (panel) {
+      panel.innerHTML = `<div class="tn-title">YOUTUBE METADATA</div><div class="tn-sub">This tool is built into the Metadata section of the dashboard.</div><button class="tn-btn" onclick="switchSection('meta',null);showMetaTab('yt',document.querySelector('.meta-tab-btn'))">OPEN IN METADATA TAB →</button>`;
+    };
+
+    // ─────────────────────────────────────────────────
+    // 6. IP / Domain Lookup (link to metadata)
+    // ─────────────────────────────────────────────────
+    window.nativeIPLookup = function (panel) {
+      panel.innerHTML = `<div class="tn-title">IP / DOMAIN LOOKUP</div><div class="tn-sub">This tool is built into the Metadata section with a live mini-map.</div><button class="tn-btn" onclick="switchSection('meta',null);showMetaTab('ip',document.querySelectorAll('.meta-tab-btn')[3])">OPEN IN METADATA TAB →</button>`;
+    };
+
+    // ─────────────────────────────────────────────────
+    // 7. WHOIS / RDAP
+    // ─────────────────────────────────────────────────
+    window.nativeWHOIS = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">WHOIS / RDAP LOOKUP</div>
+<div class="tn-sub">Query the global RDAP (Registration Data Access Protocol) infrastructure — successor to WHOIS, provides structured JSON registration data for domains and IP ranges.</div>
+${tnForm('rdap', 'example.com', 'LOOKUP', 'runRDAP()')}
+<div id="rdap-results" style="display:none"></div>`;
+    };
+    window.runRDAP = async function () {
+      const d = tnVal('rdap').replace(/^https?:\/\//, '').split('/')[0].toLowerCase();
+      if (!d) { tnSetErr('rdap', 'Enter a domain name'); return; }
+      tnSetErr('rdap', ''); tnSetLoad('rdap', true);
+      document.getElementById('rdap-results').style.display = 'none';
+      try {
+        const r = await Promise.race([fetch(`https://rdap.org/domain/${d}`), new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 8000))]);
+        if (!r.ok) throw new Error('Domain not found in RDAP');
+        const j = await r.json();
+        const getEvDate = (type) => { const ev = (j.events || []).find(e => e.eventAction === type); return ev ? ev.eventDate?.slice(0, 10) : '–'; };
+        const getOrg = (role) => { const e = (j.entities || []).find(e => (e.roles || []).includes(role)); if (!e) return '–'; const vcard = e.vcardArray?.[1] || []; const fn = vcard.find(v => v[0] === 'fn'); return fn ? fn[3] : '–'; };
+        const nsList = (j.nameservers || []).map(n => n.ldhName || n.unicodeName || '?');
+        const status = (j.status || []).join(', ') || '–';
+        document.getElementById('rdap-results').style.display = 'block';
+        document.getElementById('rdap-results').innerHTML =
+          tnCard('DOMAIN REGISTRATION', `<div class="tn-grid">${tnGrid([
+            ['Domain', j.ldhName || d],
+            ['Handle', j.handle || '–'],
+            ['Status', `<span class="tn-badge ${j.status?.includes('active') ? 'green' : 'amber'}">${status}</span>`],
+            ['Registered', getEvDate('registration')],
+            ['Updated', getEvDate('last changed')],
+            ['Expiry', getEvDate('expiration')],
+            ['Registrant', getOrg('registrant')],
+            ['Registrar', getOrg('registrar')],
+          ])}</div>`)
+          + (nsList.length ? tnCard('NAMESERVERS', `<div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.8">${nsList.join('<br>')}</div>`) : '')
+          + tnCard('RAW REGISTRY', `<pre style="font-family:var(--mono);font-size:9px;color:var(--dim);overflow:auto;max-height:200px;line-height:1.5">${JSON.stringify(j, null, 2)}</pre>`);
+      } catch (e) { tnSetErr('rdap', e.message); }
+      finally { tnSetLoad('rdap', false); }
+    };
+
+    // ─────────────────────────────────────────────────
+    // 8. DNS Lookup
+    // ─────────────────────────────────────────────────
+    window.nativeDNS = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">DNS LOOKUP</div>
+<div class="tn-sub">Query DNS records via Cloudflare's 1.1.1.1 DNS-over-HTTPS resolver. Supports A, AAAA, MX, NS, TXT, CNAME, SOA, and PTR records.</div>
+<div class="tn-form">
+  <input class="tn-input" id="dns-inp" placeholder="example.com" onkeydown="if(event.key==='Enter')runDNS()">
+  <select class="tn-select" id="dns-type">
+    <option>A</option><option>AAAA</option><option>MX</option><option>NS</option>
+    <option>TXT</option><option>CNAME</option><option>SOA</option><option>PTR</option><option>ANY</option>
+  </select>
+  <button class="tn-btn" onclick="runDNS()">LOOKUP</button>
+</div>
+<div class="tn-error" id="dns-err"></div><div class="tn-loading" id="dns-load">Querying…</div>
+<div id="dns-results" style="display:none"></div>`;
+    };
+    window.runDNS = async function () {
+      const d = tnVal('dns'); if (!d) { tnSetErr('dns', 'Enter a domain'); return; }
+      const type = document.getElementById('dns-type').value;
+      tnSetErr('dns', ''); tnSetLoad('dns', true);
+      document.getElementById('dns-results').style.display = 'none';
+      try {
+        const r = await Promise.race([
+          fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(d)}&type=${type}`, { headers: { 'Accept': 'application/dns-json' } }),
+          new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 8000))
+        ]);
+        const j = await r.json();
+        const answers = j.Answer || j.Authority || [];
+        const TYPES = { 1: 'A', 2: 'NS', 5: 'CNAME', 6: 'SOA', 12: 'PTR', 15: 'MX', 16: 'TXT', 28: 'AAAA', 255: 'ANY' };
+        const rows = answers.map(a => `<tr><td>${a.name}</td><td>${TYPES[a.type] || a.type}</td><td>${a.TTL}s</td><td style="word-break:break-all">${a.data}</td></tr>`).join('');
+        document.getElementById('dns-results').style.display = 'block';
+        document.getElementById('dns-results').innerHTML =
+          answers.length ? tnCard(`${type} RECORDS FOR ${d.toUpperCase()}`, `<div style="padding:0"><table class="tn-table"><thead><tr><th>NAME</th><th>TYPE</th><th>TTL</th><th>VALUE</th></tr></thead><tbody>${rows}</tbody></table></div>`)
+            : `<div class="tn-card"><div class="tn-card-body"><div style="font-family:var(--mono);font-size:10px;color:var(--dim)">No ${type} records found for ${d}.</div></div></div>`;
+      } catch (e) { tnSetErr('dns', e.message); }
+      finally { tnSetLoad('dns', false); }
+    };
+
+    // ─────────────────────────────────────────────────
+    // 9. SSL Certificate Transparency
+    // ─────────────────────────────────────────────────
+    window.nativeCertSearch = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">SSL CERTIFICATE SEARCH</div>
+<div class="tn-sub">Query certificate transparency logs via crt.sh — find all SSL/TLS certificates issued for a domain, including subdomains and wildcards. Useful for subdomain enumeration.</div>
+${tnForm('cert', '%.example.com (use % wildcard)', 'SEARCH', 'runCertSearch()')}
+<div id="cert-results" style="display:none"></div>`;
+    };
+    window.runCertSearch = async function () {
+      const d = tnVal('cert'); if (!d) { tnSetErr('cert', 'Enter a domain (use % as wildcard, e.g. %.example.com)'); return; }
+      tnSetErr('cert', ''); tnSetLoad('cert', true);
+      document.getElementById('cert-results').style.display = 'none';
+      try {
+        const url = `https://crt.sh/?q=${encodeURIComponent(d)}&output=json`;
+        const r = await proxyFetch(url, 10000);
+        const raw = await r.text();
+        let certs = JSON.parse(raw);
+        // Deduplicate by common_name
+        const seen = new Set(); certs = certs.filter(c => { const k = c.common_name; if (seen.has(k)) return false; seen.add(k); return true; });
+        const rows = certs.slice(0, 50).map(c => `<tr><td style="color:var(--g)">${c.common_name || '?'}</td><td>${c.issuer_name?.split(',')[0] || '?'}</td><td>${(c.not_before || '').slice(0, 10)}</td><td>${(c.not_after || '').slice(0, 10)}</td></tr>`).join('');
+        document.getElementById('cert-results').style.display = 'block';
+        document.getElementById('cert-results').innerHTML = tnCard(`${Math.min(certs.length, 50)} CERTIFICATES FOR ${d.toUpperCase()}${certs.length > 50 ? ' (showing 50)' : ''}`, `<div style="padding:0"><table class="tn-table"><thead><tr><th>COMMON NAME</th><th>ISSUER</th><th>ISSUED</th><th>EXPIRES</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+      } catch (e) { tnSetErr('cert', e.message); }
+      finally { tnSetLoad('cert', false); }
+    };
+
+    // ─────────────────────────────────────────────────
+    // 10. Bulk IP (native panel)
+    // ─────────────────────────────────────────────────
+    window.nativeBulkIP = function (panel) {
+      panel.innerHTML = `<div class="tn-title">BULK IP SCAN</div><div class="tn-sub">This tool is also available in the Metadata section.</div><button class="tn-btn" onclick="switchSection('meta',null);document.querySelectorAll('.meta-tab-btn')[6]?.click()">OPEN IN METADATA TAB →</button>`;
+    };
+
+    // ─────────────────────────────────────────────────
+    // 11. Shodan (search hub)
+    // ─────────────────────────────────────────────────
+    window.nativeShodanSearch = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">SHODAN SEARCH</div>
+<div class="tn-sub">Shodan indexes internet-connected devices — servers, routers, webcams, ICS/SCADA systems. Enter a query to open results in the tool panel. Useful filter examples shown below.</div>
+${tnForm('shodan', 'webcam country:US has_screenshot:true', 'SEARCH', 'runShodanSearch()')}
+<div class="tn-section-lbl" style="margin-top:8px">QUICK FILTERS</div>
+<div class="tn-tag-list">
+${['country:US port:22', 'product:nginx city:London', 'has_screenshot:true webcam', 'os:Windows port:3389', 'port:8080 http.title:"camera"', 'iot country:DE', 'ssl.cert.expired:true', 'port:21 anonymous', 'vuln:CVE-2017-0144'].map(f => `<span class="tn-tag" onclick="document.getElementById('shodan-inp').value='${f}'">${f}</span>`).join('')}
+</div>`;
+    };
+    window.runShodanSearch = function () {
+      const q = tnVal('shodan'); if (!q) return;
+      loadToolFrame(`https://www.shodan.io/search?query=${encodeURIComponent(q)}`, 'Shodan Search');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 12. Censys
+    // ─────────────────────────────────────────────────
+    window.nativeCensys = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">CENSYS SEARCH</div>
+<div class="tn-sub">Censys provides comprehensive internet scan data across all IPv4/IPv6 addresses and domains. Search hosts, certificates, and services.</div>
+<div class="tn-form" style="flex-direction:column;gap:8px">
+  <div class="tn-form">
+    <input class="tn-input" id="censys-inp" placeholder="8.8.8.8 or example.com or service.name: HTTP">
+    <select class="tn-select" id="censys-type"><option value="hosts">Hosts</option><option value="certs">Certificates</option></select>
+    <button class="tn-btn" onclick="runCensys()">SEARCH</button>
+  </div>
+</div>
+<div class="tn-tag-list" style="margin-top:6px">
+${['service.port: 22 and location.country: CN', 'service.service_name: HTTP', 'labels: honeypot', 'autonomous_system.name: AMAZON', 'parsed.names: example.com'].map(f => `<span class="tn-tag" onclick="document.getElementById('censys-inp').value='${f}'">${f}</span>`).join('')}
+</div>`;
+    };
+    window.runCensys = function () {
+      const q = tnVal('censys'), type = document.getElementById('censys-type').value;
+      loadToolFrame(`https://search.censys.io/${type}?q=${encodeURIComponent(q)}`, 'Censys');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 13. VirusTotal
+    // ─────────────────────────────────────────────────
+    window.nativeVirusTotal = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">VIRUSTOTAL SCAN</div>
+<div class="tn-sub">Submit a URL, domain, IP, or file hash to VirusTotal's 70+ antivirus and threat intelligence engines.</div>
+<div class="tn-form">
+  <input class="tn-input" id="vt-inp" placeholder="https://example.com or 8.8.8.8 or SHA256 hash">
+  <select class="tn-select" id="vt-type"><option value="url">URL</option><option value="domain">Domain</option><option value="ip-address">IP</option><option value="file">File Hash</option></select>
+  <button class="tn-btn" onclick="runVT()">SCAN</button>
+</div>`;
+    };
+    window.runVT = function () {
+      const q = tnVal('vt'), type = document.getElementById('vt-type').value;
+      let url;
+      if (type === 'url') url = `https://www.virustotal.com/gui/url/${btoa(q.trim()).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')}`;
+      else if (type === 'domain') url = `https://www.virustotal.com/gui/domain/${encodeURIComponent(q)}`;
+      else if (type === 'ip-address') url = `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(q)}`;
+      else url = `https://www.virustotal.com/gui/file/${encodeURIComponent(q)}`;
+      loadToolFrame(url, 'VirusTotal');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 14. AbuseIPDB
+    // ─────────────────────────────────────────────────
+    window.nativeAbuseIPDB = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">ABUSEIPDB CHECK</div>
+<div class="tn-sub">Check any IP address against the AbuseIPDB community database of reported malicious IPs — spam, hacking, brute force, and DDoS sources.</div>
+${tnForm('abuseip', '1.2.3.4', 'CHECK IP', 'runAbuseIPDB()')}`;
+    };
+    window.runAbuseIPDB = function () {
+      const ip = tnVal('abuseip'); if (!ip) return;
+      loadToolFrame(`https://www.abuseipdb.com/check/${encodeURIComponent(ip)}`, 'AbuseIPDB');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 15. Social Media Search
+    // ─────────────────────────────────────────────────
+    window.nativeSocialSearch = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">SOCIAL MEDIA SEARCH</div>
+<div class="tn-sub">Cross-platform social search. Enter a keyword, hashtag, or username and select a platform to open results in the tool panel.</div>
+<div class="tn-form">
+  <input class="tn-input" id="soc-inp" placeholder="keyword, #hashtag, or @username">
+  <select class="tn-select" id="soc-platform">
+    <option value="twitter">Twitter/X</option>
+    <option value="reddit">Reddit</option>
+    <option value="instagram">Instagram</option>
+    <option value="tiktok">TikTok</option>
+    <option value="linkedin">LinkedIn</option>
+    <option value="youtube">YouTube</option>
+    <option value="mastodon">Mastodon</option>
+    <option value="bluesky">Bluesky</option>
+    <option value="intelx">Intelligence X</option>
+  </select>
+  <button class="tn-btn" onclick="runSocialSearch()">SEARCH</button>
+</div>`;
+    };
+    window.runSocialSearch = function () {
+      const q = tnVal('soc'), p = document.getElementById('soc-platform').value;
+      const qe = encodeURIComponent(q);
+      const urls = {
+        twitter: `https://twitter.com/search?q=${qe}&f=live`,
+        reddit: `https://www.reddit.com/search/?q=${qe}&sort=new`,
+        instagram: `https://www.instagram.com/explore/tags/${qe.replace(/^%23/, '')}`,
+        tiktok: `https://www.tiktok.com/search?q=${qe}`,
+        linkedin: `https://www.linkedin.com/search/results/all/?keywords=${qe}`,
+        youtube: `https://www.youtube.com/results?search_query=${qe}`,
+        mastodon: `https://mastodon.social/search?q=${qe}`,
+        bluesky: `https://bsky.app/search?q=${qe}`,
+        intelx: `https://intelx.io/?s=${qe}`,
+      };
+      loadToolFrame(urls[p] || urls.twitter, 'Social Search — ' + p);
+    };
+
+    // ─────────────────────────────────────────────────
+    // 16. Reddit Deep Search
+    // ─────────────────────────────────────────────────
+    window.nativeRedditSearch = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">REDDIT DEEP SEARCH</div>
+<div class="tn-sub">Search Reddit including deleted posts using Unddit and Pushshift archives. Also searches by user, subreddit, and keyword combinations.</div>
+<div class="tn-form">
+  <input class="tn-input" id="rdt-inp" placeholder="keyword or u/username">
+  <select class="tn-select" id="rdt-src"><option value="unddit">Unddit (deleted)</option><option value="reddit">Reddit Live</option><option value="pullpush">PullPush Archive</option></select>
+  <button class="tn-btn" onclick="runRedditSearch()">SEARCH</button>
+</div>`;
+    };
+    window.runRedditSearch = function () {
+      const q = tnVal('rdt'), src = document.getElementById('rdt-src').value;
+      const qe = encodeURIComponent(q);
+      const urls = {
+        unddit: `https://undelete.pullpush.io/?term=${qe}`,
+        reddit: `https://www.reddit.com/search/?q=${qe}&sort=new`,
+        pullpush: `https://pullpush.io/?html=1&search_all=${qe}`,
+      };
+      loadToolFrame(urls[src], 'Reddit Search');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 17. SunCalc
+    // ─────────────────────────────────────────────────
+    window.nativeSunCalc = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">SUNCALC — SHADOW ANALYSIS</div>
+<div class="tn-sub">Analyze sun position, shadow direction, and solar times for any location and date. Essential for photo geolocation and timestamp verification. Opens in tool frame with current map coordinates pre-loaded.</div>
+<div class="tn-form">
+  <input class="tn-input" id="sun-lat" placeholder="Latitude" value="${map ? map.getCenter().lat.toFixed(4) : '40.7128'}">
+  <input class="tn-input" id="sun-lng" placeholder="Longitude" value="${map ? map.getCenter().lng.toFixed(4) : '-74.0060'}">
+  <input class="tn-input" id="sun-date" type="date" value="${new Date().toISOString().slice(0, 10)}">
+  <button class="tn-btn" onclick="runSunCalc()">OPEN SUNCALC</button>
+</div>`;
+    };
+    window.runSunCalc = function () {
+      const lat = document.getElementById('sun-lat').value;
+      const lng = document.getElementById('sun-lng').value;
+      const date = document.getElementById('sun-date').value;
+      const t = date.replace(/-/g, '/') + '/10:00';
+      loadToolFrame(`https://www.suncalc.org/#/${lat},${lng},15/${t}/1/3`, 'SunCalc');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 18. Overpass / OSM
+    // ─────────────────────────────────────────────────
+    window.nativeOverpass = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">OVERPASS / OPENSTREETMAP QUERY</div>
+<div class="tn-sub">Query OpenStreetMap features by tag and bounding box using the Overpass API. Results open in Overpass Turbo for visualization.</div>
+<div class="tn-form">
+  <input class="tn-input" id="ovp-tag" placeholder="amenity=hospital or military=base" style="flex:2">
+  <button class="tn-btn" onclick="runOverpass()">QUERY MAP AREA</button>
+</div>
+<div class="tn-section-lbl">QUICK QUERIES</div>
+<div class="tn-tag-list">
+${['military=airfield', 'military=base', 'military=training_area', 'aeroway=aerodrome', 'amenity=police', 'tower:type=observation', 'man_made=surveillance', 'power=plant'].map(f => `<span class="tn-tag" onclick="document.getElementById('ovp-tag').value='${f}'">${f}</span>`).join('')}
+</div>`;
+    };
+    window.runOverpass = function () {
+      const tag = document.getElementById('ovp-tag').value.trim();
+      if (!tag) return;
+      const b = map.getBounds();
+      const bbox = `${b.getSouth().toFixed(3)},${b.getWest().toFixed(3)},${b.getNorth().toFixed(3)},${b.getEast().toFixed(3)}`;
+      const query = `[out:json][timeout:25];(node[${tag}](${bbox});way[${tag}](${bbox});relation[${tag}](${bbox}););out body;>;out skel qt;`;
+      loadToolFrame(`https://overpass-turbo.eu/?Q=${encodeURIComponent(query)}&R`, 'Overpass Turbo');
+    };
+
+    // ─────────────────────────────────────────────────
+    // 19. Geo Tools (Google Earth, Sentinel)
+    // ─────────────────────────────────────────────────
+    window.nativeGEarth = function (panel) {
+      const c = map ? map.getCenter() : { lat: 40.7, lng: -74 };
+      panel.innerHTML = `<div class="tn-title">GOOGLE EARTH WEB</div><div class="tn-sub">High-resolution satellite and aerial imagery with 3D terrain. Opens centered on your current map view.</div><button class="tn-btn" onclick="loadToolFrame('https://earth.google.com/web/@${c.lat.toFixed(4)},${c.lng.toFixed(4)},1000d,35y,0h,0t,0r','Google Earth')">OPEN GOOGLE EARTH →</button>`;
+    };
+    window.nativeSentinel = function (panel) {
+      const c = map ? map.getCenter() : { lat: 40.7, lng: -74 };
+      panel.innerHTML = `<div class="tn-title">SENTINEL EO BROWSER</div><div class="tn-sub">Multi-spectral satellite imagery from ESA Sentinel satellites. Supports false-color, NDVI vegetation, moisture, and more.</div><button class="tn-btn" onclick="loadToolFrame('https://apps.sentinel-hub.com/eo-browser/?zoom=12&lat=${c.lat.toFixed(4)}&lng=${c.lng.toFixed(4)}','Sentinel EO Browser')">OPEN SENTINEL →</button>`;
+    };
+    window.nativeGeoTools = function (panel) {
+      const tools = [
+        { n: 'GeoGuessr', u: 'https://www.geoguessr.com', d: 'Geolocation training game' },
+        { n: 'PeakVisor', u: 'https://peakvisor.com', d: 'Mountain peak identification from photos' },
+        { n: 'Mapillary', u: 'https://www.mapillary.com', d: 'Street-level imagery database' },
+        { n: 'What3Words', u: 'https://map.what3words.com', d: '3-word coordinate system' },
+        { n: 'OSINT Combine', u: 'https://www.osintcombine.com/tools', d: 'OSINT geolocation tools collection' },
+      ];
+      panel.innerHTML = `<div class="tn-title">GEOLOCATION TOOLS</div><div class="tn-section-lbl">TOOL COLLECTION</div><div class="tn-platform-grid">${tools.map(t => `<div class="tn-platform-link" onclick="loadToolFrame('${t.u}','${t.n}')"><div class="tn-platform-dot chk"></div><div><div>${t.n}</div><div style="font-size:8px;color:var(--dim)">${t.d}</div></div></div>`).join('')}</div>`;
+    };
+
+    // ─────────────────────────────────────────────────
+    // 20. Flight tools
+    // ─────────────────────────────────────────────────
+    window.nativeADSB = function (panel) {
+      const c = map ? map.getCenter() : { lat: 40.7, lng: -74 };
+      panel.innerHTML = `<div class="tn-title">ADS-B EXCHANGE</div><div class="tn-sub">Unfiltered global flight tracking — includes military, private, and government aircraft not shown on FR24. Opens centered on current map view.</div><button class="tn-btn" onclick="loadToolFrame('https://globe.adsbexchange.com/?lat=${c.lat.toFixed(3)}&lon=${c.lng.toFixed(3)}&zoom=8','ADS-B Exchange')">OPEN ADS-B EXCHANGE →</button>`;
+    };
+    window.nativeFR24Tool = function (panel) {
+      panel.innerHTML = `<div class="tn-title">FLIGHTRADAR24</div><div class="tn-sub">Commercial flight tracking. Live data is also available on the MAP tab via the FLIGHTS layer.</div><button class="tn-btn" onclick="switchSection('map',null)">→ VIEW ON MAP TAB</button><button class="tn-btn secondary" style="margin-top:8px" onclick="loadToolFrame('https://www.flightradar24.com','FlightRadar24')">OPEN FR24 IN PANEL</button>`;
+    };
+    window.nativeMarineTraffic = function (panel) {
+      const c = map ? map.getCenter() : { lat: 40.7, lng: -74 };
+      panel.innerHTML = `<div class="tn-title">MARINETRAFFIC</div><div class="tn-sub">Live AIS vessel positions worldwide. Use the VESSELS layer on the MAP tab for live overlay.</div><button class="tn-btn" onclick="loadToolFrame('https://www.marinetraffic.com/en/ais/home/centerx:${c.lng.toFixed(2)}/centery:${c.lat.toFixed(2)}/zoom:8','MarineTraffic')">OPEN MARINETRAFFIC →</button>`;
+    };
+    window.nativeVesselFinder = function (panel) {
+      panel.innerHTML = `<div class="tn-title">VESSELFINDER</div><div class="tn-sub">Real-time AIS vessel tracking with arrival/departure data, vessel specs, and voyage history.</div><button class="tn-btn" onclick="loadToolFrame('https://www.vesselfinder.com','VesselFinder')">OPEN VESSELFINDER →</button>`;
+    };
+    window.nativeOpenSky = function (panel) {
+      panel.innerHTML = `<div class="tn-title">OPENSKY NETWORK</div><div class="tn-sub">Open ADS-B data cooperative. Free live and historical flight data API used by this dashboard's FLIGHTS layer.</div><button class="tn-btn" onclick="loadToolFrame('https://opensky-network.org/network/explorer','OpenSky Explorer')">OPEN OPENSKY →</button>`;
+    };
+
+    // ─────────────────────────────────────────────────
+    // 21. Wayback Machine
+    // ─────────────────────────────────────────────────
+    window.nativeWayback = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">WAYBACK MACHINE</div>
+<div class="tn-sub">Search the Internet Archive's CDX API for cached snapshots of any URL, then open any snapshot inline.</div>
+${tnForm('wayback', 'https://example.com', 'FIND SNAPSHOTS', 'runWayback()')}
+<div id="wayback-results" style="display:none"></div>`;
+    };
+    window.runWayback = async function () {
+      const url = tnVal('wayback'); if (!url) { tnSetErr('wayback', 'Enter a URL'); return; }
+      tnSetErr('wayback', ''); tnSetLoad('wayback', true);
+      document.getElementById('wayback-results').style.display = 'none';
+      try {
+        const cdx = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&output=json&limit=15&fl=timestamp,statuscode,mimetype&from=20100101&filter=statuscode:200`;
+        const r = await Promise.race([fetch(cdx), new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 10000))]);
+        const rows = await r.json();
+        const data = rows.slice(1); // skip header
+        if (!data.length) throw new Error('No snapshots found for this URL');
+        const table = '<table class="tn-table"><thead><tr><th>DATE</th><th>STATUS</th><th>TYPE</th><th>ACTION</th></tr></thead><tbody>' +
+          data.map(([ts, status, mime]) => {
+            const d = ts.slice(0, 4) + '-' + ts.slice(4, 6) + '-' + ts.slice(6, 8) + ' ' + ts.slice(8, 10) + ':' + ts.slice(10, 12);
+            const wbUrl = `https://web.archive.org/web/${ts}/${url}`;
+            return `<tr><td>${d}</td><td>${status}</td><td style="color:var(--dim)">${mime || '?'}</td><td><button class="tn-snap-btn" onclick="loadToolFrame('${wbUrl}','Wayback ${d}')">VIEW</button></td></tr>`;
+          }).join('') + '</tbody></table>';
+        document.getElementById('wayback-results').style.display = 'block';
+        document.getElementById('wayback-results').innerHTML = tnCard(`${data.length} SNAPSHOTS FOUND`, `<div style="padding:0">${table}</div>`);
+      } catch (e) { tnSetErr('wayback', e.message); }
+      finally { tnSetLoad('wayback', false); }
+    };
+
+    // ─────────────────────────────────────────────────
+    // 22. Pastebin Search
+    // ─────────────────────────────────────────────────
+    window.nativePasteSearch = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">PASTEBIN SEARCH</div>
+<div class="tn-sub">Search Pastebin and related paste sites via psbdmp.ws for exposed credentials, code, or data containing your keywords.</div>
+${tnForm('paste', 'email, domain, or keyword', 'SEARCH', 'runPasteSearch()')}
+<div id="paste-results" style="display:none"></div>`;
+    };
+    window.runPasteSearch = async function () {
+      const q = tnVal('paste'); if (!q) { tnSetErr('paste', 'Enter a search term'); return; }
+      tnSetErr('paste', ''); tnSetLoad('paste', true);
+      document.getElementById('paste-results').style.display = 'none';
+      try {
+        const r = await proxyFetch('https://psbdmp.ws/api/search/' + encodeURIComponent(q), 10000);
+        const j = await r.json();
+        const items = j.data || j || [];
+        if (!Array.isArray(items) || !items.length) throw new Error('No results found. Try broader keywords.');
+        const rows = items.slice(0, 20).map(p => `<tr><td style="color:var(--g)">${p.id || '?'}</td><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.text?.slice(0, 80) || '?'}</td><td><button class="tn-snap-btn" onclick="loadToolFrame('https://pastebin.com/${p.id}','Paste ${p.id}')">VIEW</button></td></tr>`).join('');
+        document.getElementById('paste-results').style.display = 'block';
+        document.getElementById('paste-results').innerHTML = tnCard(`${Math.min(items.length, 20)} PASTE RESULTS`, `<div style="padding:0"><table class="tn-table"><thead><tr><th>ID</th><th>PREVIEW</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`);
+      } catch (e) { tnSetErr('paste', e.message); }
+      finally { tnSetLoad('paste', false); }
+    };
+
+    // ─────────────────────────────────────────────────
+    // 23. Frameworks / Resources
+    // ─────────────────────────────────────────────────
+    window.nativeFramework = function (panel) {
+      panel.innerHTML = `<div class="tn-title">OSINT FRAMEWORK</div><div class="tn-sub">Comprehensive categorized index of OSINT tools and resources maintained by the community.</div><button class="tn-btn" onclick="loadToolFrame('https://osintframework.com','OSINT Framework')">OPEN OSINT FRAMEWORK →</button>`;
+    };
+    window.nativeBellingcat = function (panel) {
+      panel.innerHTML = `<div class="tn-title">BELLINGCAT TOOLKIT</div><div class="tn-sub">Curated toolkit from Bellingcat — the open-source investigation collective behind major geopolitical investigations.</div><button class="tn-btn" onclick="loadToolFrame('https://bellingcat.gitbook.io/toolkit','Bellingcat Toolkit')">OPEN BELLINGCAT TOOLKIT →</button>`;
+    };
+    window.nativeMaltego = function (panel) {
+      panel.innerHTML = `<div class="tn-title">MALTEGO CE</div><div class="tn-sub">Maltego Community Edition — visual link analysis and entity relationship mapping. Download required (desktop application).</div><div class="tn-platform-grid" style="margin-top:12px"><div class="tn-platform-link" onclick="loadToolFrame('https://www.maltego.com/downloads/','Maltego Download')"><div class="tn-platform-dot chk"></div>Download Maltego CE</div><div class="tn-platform-link" onclick="loadToolFrame('https://docs.maltego.com/','Maltego Docs')"><div class="tn-platform-dot chk"></div>Documentation</div></div>`;
+    };
+    window.nativeHunter = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">HUNTER.IO — EMAIL FINDER</div>
+<div class="tn-sub">Find and verify professional email addresses by domain. Hunter.io indexes public email addresses from the web.</div>
+${tnForm('hunter', 'company.com', 'FIND EMAILS', 'runHunter()')}`;
+    };
+    window.runHunter = function () {
+      const d = tnVal('hunter'); if (!d) return;
+      loadToolFrame(`https://hunter.io/domain-search?domain=${encodeURIComponent(d)}`, 'Hunter.io');
+    };
+    window.nativeHolehe = function (panel) {
+      panel.innerHTML = `
+<div class="tn-title">HOLEHE — EMAIL ACCOUNT CHECKER</div>
+<div class="tn-sub">Holehe checks if an email is registered on 120+ websites without triggering alerts. For CLI usage see the GitHub repo; use the online alternative below.</div>
+<div class="tn-platform-grid" style="margin-top:12px">
+  <div class="tn-platform-link" onclick="loadToolFrame('https://github.com/megadose/holehe','Holehe GitHub')"><div class="tn-platform-dot chk"></div>Holehe GitHub (CLI tool)</div>
+  <div class="tn-platform-link" onclick="loadToolFrame('https://epieos.com/','Epieos.com')"><div class="tn-platform-dot chk"></div>Epieos (web alternative)</div>
+  <div class="tn-platform-link" onclick="loadToolFrame('https://castrick.net/','Castrick')"><div class="tn-platform-dot chk"></div>Castrick.net</div>
+</div>`;
+    };
+
+
+    // ══════════════════════════════════════════════════
+    // THEME TOGGLE
+    // ══════════════════════════════════════════════════
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      document.getElementById('theme-toggle').textContent = document.body.classList.contains('light') ? '◑ DARK' : '◑ LIGHT';
+    }
+
+    // ══════════════════════════════════════════════════
+    // COORDINATE / LOCATION SEARCH (Nominatim)
+    // ══════════════════════════════════════════════════
+    let _csrTimer = null;
+    function doCoordSearch() {
+      const q = document.getElementById('coord-search-input').value.trim();
+      if (!q) return;
+      // Check if it's a raw lat,lng pair
+      const latLng = /^(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)$/.exec(q);
+      if (latLng) {
+        map.setView([parseFloat(latLng[1]), parseFloat(latLng[2])], 12);
+        document.getElementById('coord-search-results').style.display = 'none';
+        return;
+      }
+      clearTimeout(_csrTimer);
+      _csrTimer = setTimeout(async () => {
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6`, { headers: { 'Accept-Language': 'en' } });
+          const results = await r.json();
+          const box = document.getElementById('coord-search-results');
+          if (!results.length) { box.innerHTML = '<div class="csr-item" style="color:var(--dim)">No results found</div>'; box.style.display = 'block'; return; }
+          box.innerHTML = results.map(p => `<div class="csr-item" onclick="map.setView([${p.lat},${p.lon}],13);document.getElementById('coord-search-results').style.display='none';document.getElementById('coord-search-input').value='${(p.display_name || '').replace(/'/g, "&#39;").slice(0, 60)}'"><b>${(p.display_name || '').slice(0, 60)}</b><br><span style="color:var(--dim);font-size:9px">${(+p.lat).toFixed(4)}, ${(+p.lon).toFixed(4)} · ${p.type || ''}</span></div>`).join('');
+          box.style.display = 'block';
+        } catch (e) { }
+      }, 400);
+    }
+    document.getElementById('coord-search-input').addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('coord-search-results').style.display = 'none'; });
+    document.addEventListener('click', e => { if (!document.getElementById('coord-search-wrap').contains(e.target)) document.getElementById('coord-search-results').style.display = 'none'; });
+
+    // ══════════════════════════════════════════════════
+    // CUSTOM MAP PINS
+    // ══════════════════════════════════════════════════
+    let _sessionPins = []; // {id,lat,lng,label,marker}
+    let _pinCtxMenu = null;
+
+    function removePinCtx() { if (_pinCtxMenu) { _pinCtxMenu.remove(); _pinCtxMenu = null; } }
+
+    map.on('contextmenu', function (e) {
+      e.originalEvent.preventDefault();
+      removePinCtx();
+      const menu = document.createElement('div');
+      menu.className = 'pin-ctx';
+      menu.style.left = e.originalEvent.clientX + 'px';
+      menu.style.top = e.originalEvent.clientY + 'px';
+      menu.innerHTML = `<div class="pin-ctx-item" id="_pin-drop">📍 Drop Pin Here</div>`;
+      document.body.appendChild(menu);
+      _pinCtxMenu = menu;
+      document.getElementById('_pin-drop').onclick = () => { removePinCtx(); dropPin(e.latlng.lat, e.latlng.lng); };
+      setTimeout(() => document.addEventListener('click', removePinCtxOnce), 0);
+    });
+    function removePinCtxOnce() { removePinCtx(); document.removeEventListener('click', removePinCtxOnce); }
+
+    function dropPin(lat, lng) {
+      const label = prompt(`Pin label (${lat.toFixed(4)}, ${lng.toFixed(4)}):`, 'Pin ' + (+new Date()));
+      if (label === null) return;
+      const id = 'pin_' + Date.now();
+      const icon = L.divIcon({ html: '📍', className: '', iconSize: [18, 18], iconAnchor: [9, 18] });
+      const marker = L.marker([lat, lng], { icon }).addTo(map);
+      marker.bindPopup(`<div style="font-family:var(--mono);font-size:11px"><b style="color:#22c55e">${label || 'Pin'}</b><br>${lat.toFixed(5)}, ${lng.toFixed(5)}<br><button onclick="removePinById('${id}')" style="margin-top:4px;padding:2px 8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444;font-family:var(--mono);font-size:9px;cursor:pointer;border-radius:2px">REMOVE PIN</button></div>`, { className: '' }).openPopup();
+      const pin = { id, lat, lng, label: label || 'Pin', marker };
+      _sessionPins.push(pin);
+      try { localStorage.setItem('osint_pins', JSON.stringify(_sessionPins.map(p => ({ id: p.id, lat: p.lat, lng: p.lng, label: p.label })))); } catch (e) { }
+      renderPinsList();
+    }
+    window.removePinById = function (id) {
+      const idx = _sessionPins.findIndex(p => p.id === id);
+      if (idx < 0) return;
+      _sessionPins[idx].marker.remove();
+      _sessionPins.splice(idx, 1);
+      try { localStorage.setItem('osint_pins', JSON.stringify(_sessionPins.map(p => ({ id: p.id, lat: p.lat, lng: p.lng, label: p.label })))); } catch (e) { }
+      renderPinsList();
+      map.closePopup();
+    };
+    function renderPinsList() {
+      const list = document.getElementById('pins-list');
+      if (!_sessionPins.length) { list.innerHTML = '<div style="padding:12px;font-family:var(--mono);font-size:9px;color:var(--dim);text-align:center">Right-click on map to drop a pin</div>'; return; }
+      list.innerHTML = _sessionPins.map(p => `<div class="pin-li"><span onclick="map.setView([${p.lat},${p.lng}],14);togglePinsPanel()">📍 ${p.label}</span><span class="pin-del" onclick="removePinById('${p.id}')">✕</span></div>`).join('');
+    }
+    function togglePinsPanel() {
+      const panel = document.getElementById('pins-panel');
+      panel.classList.toggle('open');
+    }
+    // Restore saved pins on load
+    (function () {
+      try {
+        const saved = JSON.parse(localStorage.getItem('osint_pins') || '[]');
+        saved.forEach(p => {
+          const icon = L.divIcon({ html: '📍', className: '', iconSize: [18, 18], iconAnchor: [9, 18] });
+          const marker = L.marker([p.lat, p.lng], { icon }).addTo(map);
+          marker.bindPopup(`<div style="font-family:var(--mono);font-size:11px"><b style="color:#22c55e">${p.label}</b><br>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}<br><button onclick="removePinById('${p.id}')" style="margin-top:4px;padding:2px 8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444;font-family:var(--mono);font-size:9px;cursor:pointer;border-radius:2px">REMOVE PIN</button></div>`, { className: '' });
+          _sessionPins.push({ ...p, marker });
+        });
+        renderPinsList();
+      } catch (e) { }
+    })();
+
+    // ══════════════════════════════════════════════════
+    // SESSION EXPORT
+    // ══════════════════════════════════════════════════
+    function exportSession() {
+      const state = {
+        timestamp: new Date().toISOString(),
+        map: { center: map.getCenter(), zoom: map.getZoom() },
+        layers: { flights: layers.flights, fires: layers.fires, cameras: layers.cams },
+        pins: _sessionPins.map(p => ({ id: p.id, lat: p.lat, lng: p.lng, label: p.label })),
+        flight_count: allFlights.length,
+      };
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `osint-session-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.json`;
+      a.click();
+      const toast = document.getElementById('export-toast');
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 2500);
+    }
+
+
+    // ══════════════════════════════════════════════════
+    // MILITARY BASES OVERLAY (Overpass API)
+    // ══════════════════════════════════════════════════
+    const milLayerGroup = L.layerGroup().addTo(map);
+    let _milActive = false;
+
+    function toggleMilitary(btn) {
+      _milActive = !_milActive;
+      btn.classList.toggle('on', _milActive);
+      if (!_milActive) {
+        milLayerGroup.clearLayers();
+        btn.textContent = 'MIL BASES';
+        return;
+      }
+      fetchMilitary();
+    }
+
+    // Cache: bbox string → elements array, so panning back doesn't re-fetch
+    const _milCache = {};
+    let _milFetching = false;
+
+    async function fetchMilitary() {
+      if (_milFetching) return; // prevent concurrent requests
+      const zoom = map.getZoom();
+      if (zoom < 4) {
+        const btn = document.getElementById('ov-mil');
+        btn.textContent = 'MIL BASES';
+        btn.title = 'Zoom in to zoom level 4+ to load military bases';
+        // Show status but don't pop a modal that blocks the map
+        document.getElementById('ov-mil').classList.remove('on');
+        _milActive = false;
+        return;
+      }
+
+      const btn = document.getElementById('ov-mil');
+      btn.textContent = 'MIL…';
+      _milFetching = true;
+
+      const b = map.getBounds();
+      const s = b.getSouth().toFixed(2), w = b.getWest().toFixed(2);
+      const n = b.getNorth().toFixed(2), e = b.getEast().toFixed(2);
+      const cacheKey = `${s},${w},${n},${e}`;
+
+      if (_milCache[cacheKey]) {
+        _renderMilElements(_milCache[cacheKey]);
+        btn.textContent = 'MIL BASES';
+        _milFetching = false;
+        return;
+      }
+
+      // Wikidata SPARQL — sends Access-Control-Allow-Origin: * so works from file:// with no proxy needed
+      // Queries military bases, airfields, naval bases, forts within the map bounding box
+      const sparql = `
+SELECT DISTINCT ?item ?itemLabel ?lat ?lon ?typeLabel WHERE {
+  VALUES ?milClass {
+    wd:Q905145 wd:Q695850 wd:Q1968043 wd:Q18691599
+    wd:Q44782 wd:Q1785071 wd:Q1529 wd:Q57831
+  }
+  ?item wdt:P31/wdt:P279* ?milClass .
+  ?item p:P625 ?coordStmt .
+  ?coordStmt ps:P625 ?coord .
+  BIND(geof:latitude(?coord)  AS ?lat)
+  BIND(geof:longitude(?coord) AS ?lon)
+  FILTER(?lat >= ${s} && ?lat <= ${n} && ?lon >= ${w} && ?lon <= ${e})
+  OPTIONAL { ?item wdt:P31 ?type . ?type wdt:P279* ?milClass }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 200`.trim();
+
+      const sparqlUrl = `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparql)}&format=json`;
+
+      let elements = null;
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 25000);
+        const r = await fetch(sparqlUrl, {
+          headers: { 'Accept': 'application/sparql-results+json' }
+        });
+        clearTimeout(timer);
+        if (r.ok) {
+          const d = await r.json();
+          elements = (d.results?.bindings || []).map(b => ({
+            name: b.itemLabel?.value || 'Unknown',
+            lat: parseFloat(b.lat?.value),
+            lon: parseFloat(b.lon?.value),
+            type: b.typeLabel?.value || 'Military',
+            uri: b.item?.value || ''
+          })).filter(e => !isNaN(e.lat) && !isNaN(e.lon));
+        }
+      } catch (e) { console.warn('Wikidata SPARQL failed:', e.message); }
+
+      _milFetching = false;
+      btn.textContent = 'MIL BASES';
+
+      if (elements === null) {
+        btn.title = 'Military fetch failed — try again.';
+        btn.classList.remove('on');
+        _milActive = false;
+        return;
+      }
+
+      _milCache[cacheKey] = elements;
+      _renderMilElements(elements);
+    }
+
+    function _renderMilElements(elements) {
+      milLayerGroup.clearLayers();
+      if (!elements.length) {
+        document.getElementById('ov-mil').title = 'MIL BASES — none in Wikidata for this area';
+        return;
+      }
+      elements.forEach(el => {
+        const { lat, lon, name, type, uri } = el;
+        const qdId = uri.replace('http://www.wikidata.org/entity/', '');
+        const wdLink = uri ? `<div class="mpop-row"><a href="https://www.wikidata.org/wiki/${qdId}" target="_blank" style="color:var(--g)">WIKIDATA →</a></div>` : '';
+        L.marker([lat, lon], {
+          icon: L.divIcon({
+            className: '',
+            html: `<div style="font-size:11px;color:#ef4444;text-shadow:0 0 6px rgba(239,68,68,.8);cursor:pointer">✦</div>`,
+            iconSize: [12, 12], iconAnchor: [6, 6]
+          })
+        }).bindPopup(
+          `<div class="mpop"><div class="mpop-title">${name}</div>` +
+          `<div class="mpop-row">TYPE: <span>${type}</span></div>` +
+          `<div class="mpop-row">COORDS: <span>${lat.toFixed(4)}, ${lon.toFixed(4)}</span></div>` +
+          wdLink + `</div>`,
+          { className: '' }).addTo(milLayerGroup);
+      });
+      document.getElementById('ov-mil').title = `MIL BASES — ${elements.length} found (Wikidata)`;
+    }
+
+    // Debounced moveend — only re-fetch after panning stops for 1s, and only if bbox changed significantly
+    let _milMoveTimer = null;
+    map.on('moveend', function () {
+      if (!_milActive) return;
+      clearTimeout(_milMoveTimer);
+      _milMoveTimer = setTimeout(fetchMilitary, 1000);
+    });
+
+    // ══════════════════════════════════════════════════
+    // KEYBOARD SHORTCUTS
+    // ══════════════════════════════════════════════════
+    document.addEventListener('keydown', function (e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+      switch (e.key) {
+        case 'm': case 'M': switchSection('map', null); break;
+        case 'r': case 'R': switchSection('radio', null); break;
+        case 't': case 'T': switchSection('tools', null); break;
+        case 'i': case 'I': switchSection('meta', null); break;
+        case ' ': e.preventDefault(); if (audioEl) { audioEl.paused ? audioEl.play() : audioEl.pause(); } break;
+        case 'f': case 'F': document.getElementById('coord-search-input')?.focus(); break;
+        case 'p': case 'P': togglePinsPanel(); break;
+        case 'Escape':
+          document.getElementById('coord-search-results').style.display = 'none';
+          removePinCtx();
+          break;
+      }
+    });
+
+    // ══════════════════════════════════════════════════
+    // CLOCK
+    // ══════════════════════════════════════════════════
+    function tick() {
+      const n = new Date();
+      document.getElementById('clock').textContent =
+        String(n.getUTCHours()).padStart(2, '0') + ':' +
+        String(n.getUTCMinutes()).padStart(2, '0') + ':' +
+        String(n.getUTCSeconds()).padStart(2, '0') + ' UTC';
+    }
+    setInterval(tick, 1000); tick();
+
+    // ══════════════════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════════════════
+    buildSidebarCams();
+    buildCamMarkers();
+    buildSideTools();
+    buildStationList();
+    buildToolsMain();
+    map.invalidateSize();
+    // tb-cams is set inside buildCamMarkers() above
+  

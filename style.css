@@ -1815,6 +1815,7 @@ body::after {
 .rp-vol {
   flex: 1;
   -webkit-appearance: none;
+  appearance: none;
   height: 2px;
   background: var(--g3);
   border-radius: 1px;
